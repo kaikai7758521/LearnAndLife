@@ -1,6 +1,10 @@
 /* =====================================================================
- * 我的学习笔记 · 前端逻辑
- * 纯静态、无构建步骤：目录来自 manifest.json，缺失时回退 GitHub API 扫描
+ * 我的学习笔记 · 前端逻辑（macOS 桌面风格）
+ * 纯静态、无构建步骤：
+ *   - 站点标题等外观配置来自 site.json（见 assets/js/config.js 说明）
+ *   - 目录来自 manifest.json，缺失时回退 GitHub API 扫描
+ *   - 每篇笔记的图标由文件名哈希生成，可在 front matter 用 icon 覆盖
+ *   - 页面底部显示「最近更新」日期（manifest / Git 提交）
  * ===================================================================== */
 (function () {
   'use strict';
@@ -8,18 +12,21 @@
   var DEFAULTS = {
     title: '我的学习笔记',
     subtitle: '知识沉淀 · 持续更新',
+    brandIcon: '📚',
+    footer: '持续学习，持续记录',
     owner: '',
     repo: '',
     branch: 'main',
     home: 'README.md',
-    excludeDirs: ['assets', 'scripts', 'node_modules', '.github'],
+    excludeDirs: ['assets', 'scripts', 'node_modules', '.github', '_site', '.jekyll-cache'],
     excludeFiles: ['README.md'],
-    footer: '持续学习，持续记录'
+    showLastModified: true,
+    liveLastModified: true
   };
 
   var CFG = Object.assign({}, DEFAULTS, window.SITE_CONFIG || {});
 
-  /* ------------------------------------------------------------- 工具函数 */
+  /* ------------------------------------------------------------- 基础工具 */
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
 
@@ -95,13 +102,31 @@
     return ka.text.localeCompare(kb.text, 'zh-CN', { numeric: true, sensitivity: 'base' });
   }
 
+  // 2026-10-21 原样保留日期；带时间的 ISO 字符串按本地时区换算
   function formatDate(value) {
     if (!value) return '';
-    var d = new Date(value);
-    if (isNaN(d.getTime())) return String(value).slice(0, 10);
-    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var str = String(value).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+    var d = new Date(str);
+    if (isNaN(d.getTime())) {
+      var m = /^(\d{4}-\d{2}-\d{2})/.exec(str);
+      return m ? m[1] : str.slice(0, 10);
+    }
+    var mo = String(d.getMonth() + 1).padStart(2, '0');
     var day = String(d.getDate()).padStart(2, '0');
-    return d.getFullYear() + '-' + m + '-' + day;
+    return d.getFullYear() + '-' + mo + '-' + day;
+  }
+
+  function relTime(value) {
+    var d = new Date(value);
+    if (isNaN(d.getTime())) return '';
+    var diff = Date.now() - d.getTime();
+    if (diff < 0) return '';
+    var day = 86400000;
+    if (diff < 3600000) return '刚刚';
+    if (diff < day) return Math.floor(diff / 3600000) + ' 小时前';
+    if (diff < day * 30) return Math.floor(diff / day) + ' 天前';
+    return '';
   }
 
   function toast(msg, ms) {
@@ -117,6 +142,46 @@
     window.scrollTo({ top: 0, behavior: smooth === false ? 'auto' : 'smooth' });
   }
 
+  function pad2(n) { return String(n).padStart(2, '0'); }
+
+  /* --------------------------------------------------------------- 图标 */
+  // 每篇笔记的图标由路径哈希决定：同一个文件永远得到同一个图标，
+  // front matter 里的 `icon: 🚀` 或 manifest.json 的 icon 字段可覆盖。
+  var PAGE_ICONS = [
+    '📘', '📗', '📙', '📕', '📔', '📓', '📒', '📝', '🧠', '💡',
+    '🧩', '🔬', '⚙️', '🧮', '🖥️', '⌨️', '🧑‍💻', '🗄️', '🌐', '🔐',
+    '📡', '🧵', '🪄', '🚀', '🧭', '🗺️', '📦', '🏗️', '🧪', '🔭',
+    '🎯', '🌟', '🍀', '🪐', '🧬', '📐', '📊', '🗂️', '🕹️', '🎨',
+    '🪴', '☕️', '🐧', '🦀', '🐍', '☁️', '🔥', '⚡️'
+  ];
+  var FOLDER_ICONS = ['📁', '🗂️', '🧰', '📚', '🧱', '🧭', '🎒', '🏷️'];
+
+  function hashString(str) {
+    var h = 5381;
+    var s = String(str || '');
+    for (var i = 0; i < s.length; i++) {
+      h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+    }
+    return h;
+  }
+
+  function iconFor(path, explicit) {
+    if (explicit) return String(explicit);
+    var file = state.fileMap.get(path);
+    if (file && file.icon) return String(file.icon);
+    return PAGE_ICONS[hashString(path) % PAGE_ICONS.length];
+  }
+
+  function folderIcon(path) {
+    return FOLDER_ICONS[hashString(path) % FOLDER_ICONS.length];
+  }
+
+  function setBadge(el, icon) {
+    if (!el) return;
+    el.textContent = icon;
+    el.setAttribute('data-icon', icon);
+  }
+
   /* ------------------------------------------------------------- 全局状态 */
   var state = {
     repo: null,
@@ -126,31 +191,47 @@
     flat: [],
     navMap: new Map(),
     expanded: new Set(),
+    expandedSaved: false,
     current: '',
+    currentTitle: '',
+    currentIcon: '',
+    currentFm: null,
+    commitCache: new Map(),
     manifestSource: '',
     corpus: null,
     corpusPromise: null,
-    anchor: ''
+    corpusDone: false,
+    anchor: '',
+    routeSeq: 0,
+    site: {
+      title: DEFAULTS.title,
+      subtitle: DEFAULTS.subtitle,
+      brandIcon: DEFAULTS.brandIcon,
+      footer: DEFAULTS.footer
+    }
   };
 
   try {
-    var savedExpanded = JSON.parse(store('ln-expanded') || '[]');
-    if (Array.isArray(savedExpanded)) savedExpanded.forEach(function (p) { state.expanded.add(p); });
+    var savedExpanded = JSON.parse(store('ln-expanded') || 'null');
+    if (Array.isArray(savedExpanded)) {
+      state.expandedSaved = true;
+      savedExpanded.forEach(function (p) { state.expanded.add(p); });
+    }
   } catch (e) { /* ignore */ }
 
-  /* ------------------------------------------------------------- 启动 */
+  /* --------------------------------------------------------------- 启动 */
   function init() {
     var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     applyTheme(store('ln-theme') || (prefersDark ? 'dark' : 'light'), true);
 
-    $('#site-title').textContent = CFG.title;
-    $('#site-subtitle').textContent = CFG.subtitle;
-    $('#foot-text').textContent = CFG.footer;
-    document.title = CFG.title;
-
     state.repo = detectRepo();
-    setupRepoLinks();
+    restoreUiState();
+    paintSite();
     bindUi();
+    startClock();
+    setupRepoLinks();
+
+    loadSiteJson();
 
     boot().then(function () {
       window.addEventListener('hashchange', handleRoute);
@@ -171,7 +252,7 @@
   async function boot() {
     if (location.protocol === 'file:') {
       renderNavError('本地双击打开无法读取文件（浏览器安全限制）。请在项目目录运行 ' +
-        '<code>powershell -ExecutionPolicy Bypass -File scripts/serve.ps1</code>，再访问 http://localhost:8080/');
+        '<code>scripts/serve.ps1</code>，再访问 http://localhost:8080/');
       return;
     }
     try {
@@ -181,6 +262,7 @@
       state.fileMap = new Map();
       state.files.forEach(function (f) { state.fileMap.set(f.path, f); });
       buildIndex();
+      defaultExpand();
       renderNav();
       updateNavCount();
     } catch (err) {
@@ -188,562 +270,975 @@
     }
   }
 
+  /* --------------------------------------------- 站点配置（site.json） */
+  function sanitizeSiteValue(value) {
+    if (value == null) return '';
+    return String(value).replace(/[\r\n]+/g, ' ').trim().slice(0, 160);
+  }
+
+  async function loadSiteJson() {
+    try {
+      var res = await fetch('./site.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) return;
+      var data = await res.json();
+      if (!data || typeof data !== 'object' || Array.isArray(data)) return;
+      ['title', 'subtitle', 'brandIcon', 'footer'].forEach(function (key) {
+        var value = sanitizeSiteValue(data[key]);
+        if (value) state.site[key] = value;
+      });
+      paintSite();
+    } catch (e) { /* 使用 config.js 兜底值 */ }
+  }
+
+  function paintSite() {
+    var title = state.site.title || DEFAULTS.title;
+    var subtitle = state.site.subtitle || DEFAULTS.subtitle;
+    var icon = state.site.brandIcon || DEFAULTS.brandIcon;
+    var footer = state.site.footer || DEFAULTS.footer;
+
+    $$('#site-title').forEach(function (el) { el.textContent = title; });
+    $$('#site-subtitle').forEach(function (el) { el.textContent = subtitle; });
+    $$('#dh-title').forEach(function (el) { el.textContent = title; });
+    $$('[data-brand-icon], #mb-brand').forEach(function (el) { setBadge(el, icon); });
+    $$('#foot-text').forEach(function (el) { el.textContent = footer; });
+
+    if (!state.current) updateWindowTitle('', '', icon);
+    refreshDocTitle();
+    setFavicon(icon);
+  }
+
+  function setFavicon(icon) {
+    var link = document.querySelector('link[rel="icon"]');
+    if (!link) return;
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
+      '<text x="32" y="50" font-size="50" text-anchor="middle">' + escapeHtml(icon) + '</text></svg>';
+    link.setAttribute('href', 'data:image/svg+xml,' + encodeURIComponent(svg));
+  }
+
+  function refreshDocTitle() {
+    document.title = state.currentTitle
+      ? state.currentTitle + ' · ' + (state.site.title || DEFAULTS.title)
+      : (state.site.title || DEFAULTS.title);
+  }
+
+  /* ----------------------------------------------------------- 菜单栏时钟 */
+  function clockText() {
+    var d = new Date();
+    var days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    return days[d.getDay()] + ' ' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' +
+      pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
+  function startClock() {
+    var el = $('#mb-clock');
+    if (!el) return;
+    var tick = function () {
+      el.textContent = clockText();
+      el.title = new Date().toLocaleString('zh-CN');
+    };
+    tick();
+    setInterval(tick, 20000);
+  }
+
+  /* ----------------------------------------------------------- 仓库识别 */
   function detectRepo() {
     var owner = (CFG.owner || '').trim();
     var repo = (CFG.repo || '').trim();
-    if (owner && repo) return { owner: owner, repo: repo };
-    if (/(^|\.)github\.io$/i.test(location.hostname)) {
-      var autoOwner = location.hostname.split('.')[0];
-      var seg = location.pathname.split('/').filter(Boolean)[0] || '';
-      var autoRepo = seg && seg.indexOf('.') === -1 ? seg : autoOwner + '.github.io';
-      return { owner: autoOwner, repo: autoRepo };
+    var branch = (CFG.branch || 'main').trim();
+
+    if (!owner || !repo) {
+      var m = /^([^.]+)\.github\.io$/i.exec(location.hostname);
+      if (m) {
+        owner = owner || m[1];
+        var seg = location.pathname.split('/').filter(Boolean)[0] || '';
+        if (!repo && seg && !/\.html?$/i.test(seg)) repo = seg;
+      }
     }
-    return { owner: owner, repo: repo };
+    if (!owner || !repo) return null;
+    return { owner: owner, repo: repo, branch: branch || 'main' };
+  }
+
+  function repoUrl() {
+    return state.repo ? 'https://github.com/' + state.repo.owner + '/' + state.repo.repo : '';
   }
 
   function setupRepoLinks() {
-    var repo = state.repo;
-    var known = repo && repo.owner && repo.repo;
-    [$('#repo-link'), $('#repo-link-2')].forEach(function (a) {
-      if (!a) return;
-      if (!known) { a.hidden = true; return; }
-      a.hidden = false;
-      a.href = 'https://github.com/' + repo.owner + '/' + repo.repo;
+    var url = repoUrl();
+    ['#repo-link', '#repo-link-2', '#mb-repo', '#dock-repo'].forEach(function (sel) {
+      var el = $(sel);
+      if (!el) return;
+      if (url) {
+        el.href = url;
+        el.hidden = false;
+        el.removeAttribute('aria-hidden');
+      } else {
+        el.removeAttribute('href');
+        el.hidden = true;
+        el.setAttribute('aria-hidden', 'true');
+      }
     });
   }
 
-  /* ------------------------------------------------------------- 内容索引 */
-  async function loadManifest() {
-    var errors = [];
-
-    // 1) 仓库内预生成的 manifest.json（推荐：无限流、首屏快）
-    try {
-      var res = await fetch('./manifest.json?t=' + Date.now(), { cache: 'no-store' });
-      if (res.ok) {
-        var data = await res.json();
-        var files = normalizeFiles(data && data.files);
-        if (files.length) return { files: files, source: 'manifest.json' };
-        errors.push('manifest.json 中没有可展示的 .md 文件');
-      } else {
-        errors.push('manifest.json HTTP ' + res.status);
-      }
-    } catch (e) {
-      errors.push('manifest.json: ' + e.message);
-    }
-
-    // 2) 回退：GitHub API 递归扫描仓库（尚未配置 Action 时也能用）
-    var repo = state.repo;
-    if (repo && repo.owner && repo.repo) {
-      var branches = [CFG.branch, 'main', 'master'].filter(function (b, i, arr) {
-        return b && arr.indexOf(b) === i;
-      });
-      for (var i = 0; i < branches.length; i++) {
-        try {
-          var url = 'https://api.github.com/repos/' + encodeURIComponent(repo.owner) + '/' +
-            encodeURIComponent(repo.repo) + '/git/trees/' + encodeURIComponent(branches[i]) + '?recursive=1';
-          var apiRes = await fetch(url, { headers: { Accept: 'application/vnd.github+json' } });
-          if (apiRes.status === 403 || apiRes.status === 429) {
-            throw new Error('GitHub API 访问频率受限，请稍后重试或配置 manifest.json');
-          }
-          if (!apiRes.ok) { errors.push('GitHub API ' + apiRes.status + ' (' + branches[i] + ')'); continue; }
-          var tree = await apiRes.json();
-          var list = (tree.tree || []).filter(function (item) {
-            return item.type === 'blob' && /\.md$/i.test(item.path);
-          }).map(function (item) { return { path: item.path, size: item.size }; });
-          var apiFiles = normalizeFiles(list);
-          if (apiFiles.length) return { files: apiFiles, source: 'GitHub API (' + branches[i] + ')' };
-        } catch (e) {
-          errors.push('GitHub API: ' + e.message);
-        }
-      }
-    }
-
-    throw new Error(errors.join('；') || '未找到任何 Markdown 内容');
-  }
-
+  /* ------------------------------------------------------- manifest 索引 */
   function isExcluded(path) {
-    if (path === CFG.home) return true;
+    var segments = path.split('/');
+    for (var i = 0; i < segments.length; i++) {
+      if (segments[i].charAt(0) === '.') return true;
+    }
     if ((CFG.excludeFiles || []).indexOf(path) !== -1) return true;
-    if (path.split('/').some(function (p) { return p.charAt(0) === '.'; })) return true;
     var dirs = CFG.excludeDirs || [];
-    for (var i = 0; i < dirs.length; i++) {
-      if (path === dirs[i] || path.indexOf(dirs[i] + '/') === 0) return true;
+    for (var j = 0; j < dirs.length; j++) {
+      if (path === dirs[j] || path.indexOf(dirs[j] + '/') === 0) return true;
     }
     return false;
   }
 
-  function normalizeFiles(list) {
-    var out = [];
-    var seen = new Set();
-    (list || []).forEach(function (item) {
-      var rawPath = typeof item === 'string' ? item : (item && (item.path || item.name));
-      if (!rawPath) return;
-      var path = normalizePath(String(rawPath).replace(/\\/g, '/'));
-      if (!path || !/\.md$/i.test(path) || seen.has(path) || isExcluded(path)) return;
-      seen.add(path);
-      out.push({
-        path: path,
-        title: (item && item.title) || '',
-        date: formatDate(item && (item.date || item.mtime || item.modified)),
-        size: (item && item.size) || 0,
-        tags: (item && item.tags) || []
-      });
+  function normalizeFile(raw) {
+    if (!raw || !raw.path) return null;
+    var path = normalizePath(String(raw.path).replace(/^\.?\//, ''));
+    if (!path || !/\.md$/i.test(path)) return null;
+    var tags = raw.tags;
+    if (typeof tags === 'string') {
+      tags = tags.replace(/^\[|\]$/g, '').split(',').map(function (t) { return t.trim(); }).filter(Boolean);
+    }
+    return {
+      path: path,
+      title: raw.title ? String(raw.title).trim() : '',
+      date: raw.date ? String(raw.date).trim() : '',
+      lastModified: String(raw.lastModified || raw.modified || raw.mtime || '').trim(),
+      size: Number(raw.size) || 0,
+      tags: Array.isArray(tags) ? tags : [],
+      icon: raw.icon ? String(raw.icon).trim() : ''
+    };
+  }
+
+  async function loadManifest() {
+    try {
+      var res = await fetch('./manifest.json?t=' + Date.now(), { cache: 'no-store' });
+      if (res.ok) {
+        var data = await res.json();
+        var rawFiles = Array.isArray(data.files) ? data.files : [];
+        var files = rawFiles.map(normalizeFile).filter(function (f) { return f && !isExcluded(f.path); });
+        return { files: files, source: 'manifest' };
+      }
+    } catch (e) { /* 继续尝试 GitHub API */ }
+
+    if (!state.repo) {
+      throw new Error('没有找到 manifest.json。请运行 scripts/build-manifest.ps1 生成索引后刷新页面。');
+    }
+    return githubScan();
+  }
+
+  async function githubScan() {
+    var api = 'https://api.github.com/repos/' + state.repo.owner + '/' + state.repo.repo +
+      '/git/trees/' + encodeURIComponent(state.repo.branch) + '?recursive=1';
+    var res = await fetch(api, { headers: { Accept: 'application/vnd.github+json' } });
+    if (!res.ok) {
+      throw new Error('manifest.json 缺失，且 GitHub API 扫描失败（HTTP ' + res.status + '）。' +
+        '请运行 scripts/build-manifest.ps1 后重新提交。');
+    }
+    var data = await res.json();
+    var files = (data.tree || [])
+      .filter(function (item) { return item.type === 'blob' && /\.md$/i.test(item.path); })
+      .map(function (item) { return normalizeFile(item); })
+      .filter(function (f) { return f && !isExcluded(f.path); });
+    return { files: files, source: 'github' };
+  }
+
+  function splitFrontMatter(text) {
+    var str = String(text || '').replace(/^\uFEFF/, '');
+    var match = /^---\s*\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/.exec(str);
+    if (!match) return { data: {}, body: str };
+
+    var data = {};
+    match[1].split(/\r?\n/).forEach(function (line) {
+      var kv = /^\s*([A-Za-z0-9_-]+)\s*:\s*(.*)$/.exec(line);
+      if (!kv) return;
+      var key = kv[1].toLowerCase();
+      var value = kv[2].trim();
+      if (/^\[[\s\S]*\]$/.test(value)) {
+        data[key] = value.slice(1, -1).split(',')
+          .map(function (v) { return v.trim().replace(/^['"]|['"]$/g, ''); })
+          .filter(Boolean);
+      } else {
+        data[key] = value.replace(/^(['"])([\s\S]*)\1$/, '$2');
+      }
     });
-    out.sort(function (a, b) {
-      return a.path.localeCompare(b.path, 'zh-CN', { numeric: true, sensitivity: 'base' });
-    });
-    return out;
+    return { data: data, body: str.slice(match[0].length) };
   }
 
   /* ------------------------------------------------------------- 目录树 */
   function buildIndex() {
-    var root = { name: '', path: '', type: 'dir', children: [] };
-    var dirs = new Map([['', root]]);
+    var root = { name: '', path: '', dirs: new Map(), files: [] };
 
-    state.files.forEach(function (file) {
+    state.files.slice().sort(function (a, b) {
+      return a.path.localeCompare(b.path, 'zh-CN', { numeric: true });
+    }).forEach(function (file) {
       var parts = file.path.split('/');
-      var parentPath = '';
-      parts.forEach(function (part, i) {
-        var isFile = i === parts.length - 1;
-        var p = parentPath ? parentPath + '/' + part : part;
-        var parent = dirs.get(parentPath);
-        if (!parent) return;
-        var node = null;
-        for (var j = 0; j < parent.children.length; j++) {
-          if (parent.children[j].name === part) { node = parent.children[j]; break; }
+      var node = root;
+      for (var i = 0; i < parts.length - 1; i++) {
+        var name = parts[i];
+        var path = parts.slice(0, i + 1).join('/');
+        if (!node.dirs.has(name)) {
+          node.dirs.set(name, { name: name, path: path, dirs: new Map(), files: [] });
         }
-        if (!node) {
-          node = isFile
-            ? { name: part, path: p, type: 'file', file: file, children: [] }
-            : { name: part, path: p, type: 'dir', children: [] };
-          parent.children.push(node);
-          if (!isFile) dirs.set(p, node);
-        }
-        parentPath = p;
-      });
+        node = node.dirs.get(name);
+      }
+      node.files.push(file);
     });
 
-    sortTree(root);
+    sortNode(root);
     state.tree = root;
-    state.flat = [];
-    collectFiles(root, state.flat);
-    state.navMap = new Map();
-  }
-
-  function sortTree(node) {
-    node.children.sort(function (a, b) {
-      if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
-      return compareNames(a, b);
-    });
-    node.children.forEach(function (c) { if (c.type === 'dir') sortTree(c); });
-  }
-
-  function collectFiles(node, out) {
-    node.children.forEach(function (c) {
-      if (c.type === 'file') out.push(c.file);
-      else collectFiles(c, out);
+    state.flat = state.files.slice().sort(function (a, b) {
+      return a.path.localeCompare(b.path, 'zh-CN', { numeric: true });
     });
   }
 
-  function collectDirs(node, out) {
-    node.children.forEach(function (c) {
-      if (c.type === 'dir') { out.push(c.path); collectDirs(c, out); }
+  function sortNode(node) {
+    node.files.sort(function (a, b) {
+      return compareNames({ name: baseName(a.path) }, { name: baseName(b.path) });
     });
-    return out;
+    node.sortedDirs = Array.from(node.dirs.values()).sort(compareNames);
+    node.sortedDirs.forEach(sortNode);
+  }
+
+  function defaultExpand() {
+    if (!state.tree || state.expandedSaved) return;
+    state.tree.sortedDirs.forEach(function (dir) { state.expanded.add(dir.path); });
   }
 
   function countFiles(node) {
-    var n = 0;
-    node.children.forEach(function (c) {
-      if (c.type === 'file') n += 1;
-      else n += countFiles(c);
-    });
-    return n;
+    var total = node.files.length;
+    node.sortedDirs.forEach(function (child) { total += countFiles(child); });
+    return total;
   }
 
+  function firstFile(node) {
+    if (node.files.length) return node.files[0];
+    for (var i = 0; i < node.sortedDirs.length; i++) {
+      var found = firstFile(node.sortedDirs[i]);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  function fileTitle(file) {
+    return file.title || displayName(baseName(file.path));
+  }
+
+  /* ------------------------------------------------------------- 侧边目录 */
   function renderNav() {
     var nav = $('#nav');
-    var keepScroll = nav.scrollTop;
-    nav.innerHTML = '';
+    if (!nav) return;
 
-    if (!state.files.length) {
-      nav.innerHTML = '<div class="nav-empty">还没有笔记。<br>在仓库新建「学习方向/内容/细节.md」后刷新页面即可。</div>';
+    state.navMap = new Map();
+
+    if (!state.tree || !state.files.length) {
+      nav.innerHTML = '<div class="nav-empty">还没有可展示的笔记。<br>按 <code>学习方向/内容/细节.md</code> 新建文件后运行索引脚本。</div>';
+      syncExpandLabel();
       return;
     }
 
-    nav.appendChild(buildList(state.tree.children, 0));
-    nav.scrollTop = keepScroll;
-    updateActive(state.current);
+    nav.innerHTML = '<ul class="nav-root">' + nodeMarkup(state.tree) + '</ul>';
+    $$('.nav-link', nav).forEach(function (link) {
+      state.navMap.set(link.getAttribute('data-path'), link);
+    });
+    syncExpandLabel();
+    if (state.current) updateActive(state.current);
   }
 
-  function buildList(children, depth) {
-    var ul = document.createElement('ul');
-    ul.className = depth === 0 ? 'nav-root' : 'nav-list';
+  function nodeMarkup(node) {
+    var html = '';
 
-    children.forEach(function (node) {
-      var li = document.createElement('li');
-
-      if (node.type === 'dir') {
-        var open = state.expanded.has(node.path);
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'nav-dir';
-        btn.dataset.path = node.path;
-        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-        btn.title = node.path;
-        btn.innerHTML = '<span class="chev">▸</span>' +
-          '<span class="nav-label">' + escapeHtml(displayName(node.name)) + '</span>' +
-          '<span class="nav-count">' + countFiles(node) + '</span>';
-        li.appendChild(btn);
-        li.appendChild(buildList(node.children, depth + 1));
-      } else {
-        var a = document.createElement('a');
-        a.className = 'nav-file';
-        a.href = toHash(node.path);
-        a.dataset.path = node.path;
-        a.title = node.path;
-        a.innerHTML = '<span class="nav-label">' +
-          escapeHtml((node.file && node.file.title) || displayName(node.name)) + '</span>';
-        li.appendChild(a);
-        state.navMap.set(node.path, a);
-      }
-
-      ul.appendChild(li);
+    node.sortedDirs.forEach(function (dir) {
+      var open = state.expanded.has(dir.path);
+      html += '<li class="nav-group' + (open ? '' : ' collapsed') + '" data-path="' +
+        escapeHtml(dir.path) + '">' +
+        '<button type="button" class="nav-group-btn" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+        '<span class="nav-caret" aria-hidden="true">▸</span>' +
+        '<span class="nav-folder" aria-hidden="true">' + folderIcon(dir.path) + '</span>' +
+        '<span class="nav-group-label">' + escapeHtml(displayName(dir.name)) + '</span>' +
+        '<span class="nav-count-badge">' + countFiles(dir) + '</span>' +
+        '</button>' +
+        '<ul class="nav-children">' + nodeMarkup(dir) + '</ul>' +
+        '</li>';
     });
 
-    return ul;
+    node.files.forEach(function (file) {
+      html += '<li class="nav-item">' +
+        '<a class="nav-link" href="' + toHash(file.path) + '" data-path="' + escapeHtml(file.path) + '">' +
+        '<span class="page-badge" aria-hidden="true">' + iconFor(file.path) + '</span>' +
+        '<span class="nav-link-text">' + escapeHtml(fileTitle(file)) + '</span>' +
+        '</a></li>';
+    });
+
+    return html;
+  }
+
+  function setGroupOpen(li, open) {
+    if (!li) return;
+    li.classList.toggle('collapsed', !open);
+    var btn = $('.nav-group-btn', li);
+    if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  function persistExpanded() {
+    state.expandedSaved = true;
+    store('ln-expanded', JSON.stringify(Array.from(state.expanded)));
+  }
+
+  function toggleDir(path) {
+    if (!path) return;
+    var open = !state.expanded.has(path);
+    if (open) state.expanded.add(path);
+    else state.expanded.delete(path);
+
+    $$('.nav-group', $('#nav')).forEach(function (li) {
+      if (li.getAttribute('data-path') === path) setGroupOpen(li, open);
+    });
+    persistExpanded();
+  }
+
+  function walkDirs(node, cb) {
+    node.sortedDirs.forEach(function (dir) {
+      cb(dir);
+      walkDirs(dir, cb);
+    });
+  }
+
+  function allExpanded() {
+    if (!state.tree) return false;
+    var total = 0, opened = 0;
+    walkDirs(state.tree, function (dir) {
+      total++;
+      if (state.expanded.has(dir.path)) opened++;
+    });
+    return total > 0 && total === opened;
+  }
+
+  function toggleExpandAll() {
+    if (!state.tree) return;
+    var expand = !allExpanded();
+    if (expand) walkDirs(state.tree, function (dir) { state.expanded.add(dir.path); });
+    else state.expanded.clear();
+
+    $$('.nav-group', $('#nav')).forEach(function (li) {
+      setGroupOpen(li, expand);
+    });
+    persistExpanded();
+    syncExpandLabel();
+  }
+
+  function syncExpandLabel() {
+    var btn = $('#expand-btn');
+    if (!btn) return;
+    var expand = !allExpanded();
+    btn.textContent = expand ? '展开全部' : '收起全部';
+    btn.setAttribute('aria-label', expand ? '展开全部目录' : '收起全部目录');
+  }
+
+  function expandAncestors(path) {
+    var parts = path.split('/');
+    for (var i = 1; i < parts.length; i++) {
+      var dir = parts.slice(0, i).join('/');
+      if (!state.expanded.has(dir)) {
+        state.expanded.add(dir);
+        $$('.nav-group', $('#nav')).forEach(function (li) {
+          if (li.getAttribute('data-path') === dir) setGroupOpen(li, true);
+        });
+      }
+    }
+  }
+
+  function updateActive(path) {
+    state.navMap.forEach(function (link, key) {
+      var active = key === path;
+      link.classList.toggle('active', active);
+      if (active) {
+        link.setAttribute('aria-current', 'page');
+        expandAncestors(path);
+        if (link.scrollIntoView) {
+          try { link.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ }
+        }
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    });
+    persistExpanded();
+  }
+
+  function refreshNavIcons() {
+    state.navMap.forEach(function (link, path) {
+      setBadge($('.page-badge', link), iconFor(path));
+    });
   }
 
   function updateNavCount() {
     var el = $('#nav-count');
     if (!el) return;
-    if (!state.files.length) { el.textContent = ''; return; }
-    var dirs = collectDirs(state.tree, []);
-    el.textContent = state.files.length + ' 篇笔记 · ' + dirs.length + ' 个目录';
+    el.textContent = state.files.length ? state.files.length + ' 篇' : '—';
+    el.title = state.manifestSource === 'github' ? '目录来自 GitHub API 扫描' : '目录来自 manifest.json';
   }
 
   function renderNavError(message) {
     var nav = $('#nav');
-    nav.innerHTML = '<div class="nav-error">目录加载失败：' + escapeHtml(message) + '<br><br>' +
-      '<button type="button" class="btn" id="nav-retry">重新加载</button></div>';
-    var retry = $('#nav-retry');
-    if (retry) retry.addEventListener('click', function () { location.reload(); });
+    if (nav) nav.innerHTML = '<div class="nav-error">' + message + '</div>';
+    updateNavCount();
   }
 
-  function persistExpanded() {
-    store('ln-expanded', JSON.stringify(Array.from(state.expanded)));
-  }
-
-  function expandAncestors(path) {
-    var parts = path.split('/');
-    var changed = false;
-    for (var i = 1; i < parts.length; i++) {
-      var dir = parts.slice(0, i).join('/');
-      if (!state.expanded.has(dir)) { state.expanded.add(dir); changed = true; }
-    }
-    if (changed) { persistExpanded(); renderNav(); }
-  }
-
-  function toggleDir(path) {
-    if (state.expanded.has(path)) state.expanded.delete(path);
-    else state.expanded.add(path);
-    persistExpanded();
-    renderNav();
-  }
-
-  function toggleExpandAll() {
-    var all = collectDirs(state.tree || { children: [] }, []);
-    var allOpen = all.length > 0 && all.every(function (p) { return state.expanded.has(p); });
-    if (allOpen) state.expanded.clear();
-    else all.forEach(function (p) { state.expanded.add(p); });
-    persistExpanded();
-    renderNav();
-    var btn = $('#expand-btn');
-    if (btn) btn.textContent = allOpen ? '展开全部' : '收起全部';
-  }
-
-  function updateActive(path) {
-    state.navMap.forEach(function (el, p) {
-      if (p === path) el.classList.add('active');
-      else el.classList.remove('active');
-    });
-    var active = state.navMap.get(path);
-    var nav = $('#nav');
-    if (!active || !nav) return;
-    var rect = active.getBoundingClientRect();
-    var navRect = nav.getBoundingClientRect();
-    if (rect.top < navRect.top + 8 || rect.bottom > navRect.bottom - 8) {
-      nav.scrollTop += rect.top - navRect.top - nav.clientHeight / 2;
-    }
-  }
-
-  /* ------------------------------------------------------------- 路由 */
+  /* --------------------------------------------------------------- 路由 */
   function toHash(path, anchor) {
-    var h = '#/' + encodePath(path || '');
-    if (anchor) h += '@' + encodeURIComponent(anchor);
-    return h;
+    var base = '#/' + encodePath(path || '');
+    if (anchor) base += '@' + encodeURIComponent(anchor);
+    return base;
   }
 
-  function parseRoute() {
+  function parseHash() {
     var raw = location.hash.replace(/^#\/?/, '');
     if (!raw) return { path: '', anchor: '' };
     var at = raw.indexOf('@');
-    var rawPath = at >= 0 ? raw.slice(0, at) : raw;
+    var pathPart = at >= 0 ? raw.slice(0, at) : raw;
     var anchor = at >= 0 ? safeDecode(raw.slice(at + 1)) : '';
-    return {
-      path: normalizePath(rawPath.split('/').map(safeDecode).join('/')),
-      anchor: anchor
-    };
+    if (pathPart.charAt(0) === '@') {
+      pathPart = '';
+      anchor = safeDecode(raw.slice(1));
+    }
+    var path = pathPart ? normalizePath(pathPart.split('/').map(safeDecode).join('/')) : '';
+    return { path: path, anchor: anchor };
   }
 
-  async function handleRoute() {
-    var route = parseRoute();
-    closeSidebar();
-    hideSearch(true);
+  function handleRoute() {
+    var route = parseHash();
+    state.anchor = route.anchor;
 
-    if (!route.path) { await renderHome(route.anchor); return; }
-    if (route.path === state.current) {
-      if (route.anchor) scrollToAnchor(route.anchor);
+    if (!route.path) {
+      renderHome(route.anchor);
+      closeMobileSidebar();
+      hideSearch(true);
       return;
     }
-    await openNote(route.path, route.anchor);
+    if (!state.fileMap.has(route.path)) {
+      if (state.files.length) renderNotFound(route.path);
+      else renderHome(route.anchor);
+      closeMobileSidebar();
+      return;
+    }
+    // 同一篇笔记内跳转锚点：只滚动，不重新拉取正文
+    if (route.path === state.current) {
+      if (route.anchor) scrollToAnchor(route.anchor, true);
+      closeMobileSidebar();
+      return;
+    }
+    loadNote(route.path, route.anchor);
+    closeMobileSidebar();
   }
 
-  function skeletonHtml() {
-    return '<div class="skeleton"><span></span><span></span><span></span><span></span></div>';
+  function scrollToAnchor(anchor, smooth) {
+    if (!anchor) { scrollTop(false); return; }
+    var target = document.getElementById(anchor);
+    if (!target) { scrollTop(false); return; }
+    var header = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h'), 10) || 96;
+    var top = target.getBoundingClientRect().top + window.pageYOffset - header - 12;
+    window.scrollTo({ top: Math.max(0, top), behavior: smooth === false ? 'auto' : 'smooth' });
+  }
+
+  function requestAnchorScroll(anchor) {
+    if (!anchor) return;
+    window.requestAnimationFrame(function () {
+      setTimeout(function () { scrollToAnchor(anchor, true); }, 60);
+    });
+  }
+
+  /* --------------------------------------------------------------- 首页 */
+  function latestFiles(limit) {
+    return state.files.filter(function (f) { return f.date || f.lastModified; })
+      .slice()
+      .sort(function (a, b) {
+        return String(b.lastModified || b.date).localeCompare(String(a.lastModified || a.date));
+      })
+      .slice(0, limit || 6);
+  }
+
+  function countDirs() {
+    var total = 0;
+    if (state.tree) walkDirs(state.tree, function () { total++; });
+    return total;
+  }
+
+  function homeHtml() {
+    var icon = state.site.brandIcon || DEFAULTS.brandIcon;
+    var dirs = state.tree ? state.tree.sortedDirs : [];
+    var recent = latestFiles(6);
+    var latest = recent.length ? formatDate(recent[0].lastModified || recent[0].date) : '—';
+
+    var html = '<section class="home-hero">' +
+      '<span class="home-hero-badge" data-brand-icon aria-hidden="true">' + icon + '</span>' +
+      '<h1>' + escapeHtml(state.site.title) + '</h1>' +
+      '<p class="home-sub">' + escapeHtml(state.site.subtitle) + '</p>' +
+      '<div class="home-stats">' +
+      '<span class="home-stat"><b>' + state.files.length + '</b> 篇笔记</span>' +
+      '<span class="home-stat"><b>' + dirs.length + '</b> 个方向</span>' +
+      '<span class="home-stat"><b>' + countDirs() + '</b> 个分类</span>' +
+      '<span class="home-stat">最近更新 <b>' + escapeHtml(latest) + '</b></span>' +
+      '</div></section>';
+
+    if (dirs.length) {
+      html += '<section class="home-block"><div class="home-section-head"><h2>学习方向</h2>' +
+        '<span>' + dirs.length + ' 个方向</span></div><div class="folder-grid">';
+      dirs.forEach(function (dir) {
+        var first = firstFile(dir);
+        var topics = dir.sortedDirs.length;
+        html += '<a class="folder-card" href="' + (first ? toHash(first.path) : '#/') + '">' +
+          '<span class="page-badge" aria-hidden="true">' + folderIcon(dir.path) + '</span>' +
+          '<span class="folder-card-body">' +
+          '<span class="folder-card-title">' + escapeHtml(displayName(dir.name)) + '</span>' +
+          '<span class="folder-card-desc">' + countFiles(dir) + ' 篇笔记' +
+          (topics ? ' · ' + topics + ' 个分类' : '') +
+          (first ? ' · 从「' + escapeHtml(fileTitle(first)) + '」开始' : '') +
+          '</span></span></a>';
+      });
+      html += '</div></section>';
+    }
+
+    if (recent.length) {
+      html += '<section class="home-block"><div class="home-section-head"><h2>最近更新</h2>' +
+        '<span>按最近修改排序</span></div><ul class="recent-list">';
+      recent.forEach(function (file) {
+        html += '<li><a class="recent-item" href="' + toHash(file.path) + '">' +
+          '<span class="page-badge" aria-hidden="true">' + iconFor(file.path) + '</span>' +
+          '<span class="recent-main"><span class="recent-title">' + escapeHtml(fileTitle(file)) + '</span>' +
+          '<span class="recent-path">' + escapeHtml(dirName(file.path) || '根目录') + '</span></span>' +
+          '<span class="recent-date">' + escapeHtml(formatDate(file.lastModified || file.date)) + '</span>' +
+          '</a></li>';
+      });
+      html += '</ul></section>';
+    }
+
+    html += '<section class="home-block home-readme"><div class="home-section-head">' +
+      '<h2>站点说明</h2><span>' + escapeHtml(CFG.home) + '</span></div>' +
+      '<div id="home-doc" class="home-doc markdown-body">' +
+      '<div class="state-box">正在读取首页说明…</div></div></section>';
+
+    return html;
   }
 
   async function renderHome(anchor) {
+    var article = $('#article');
+    if (!article) return;
+    var seq = ++state.routeSeq;
+
     state.current = '';
-    state.anchor = anchor || '';
+    state.currentTitle = '';
+    state.currentIcon = state.site.brandIcon || DEFAULTS.brandIcon;
+    state.currentFm = null;
+
+    article.classList.add('home-view');
+    article.innerHTML = homeHtml();
+
     updateActive('');
     setBreadcrumb('');
-    $('#pager').innerHTML = '';
-    $('#toc').innerHTML = '';
-    $('#edit-link').hidden = true;
-    document.title = CFG.title;
+    updateWindowTitle('', '', state.currentIcon);
+    refreshDocTitle();
+    renderPager('');
+    renderToc([]);
+    setEditLink('');
+    renderFootUpdated('', null);
 
-    var article = $('#article');
-    article.classList.add('home');
-    article.innerHTML = skeletonHtml();
+    var doc = $('#home-doc');
+    if (!doc) return;
 
-    var text = '';
     try {
       var res = await fetch('./' + encodePath(CFG.home), { cache: 'no-store' });
-      if (res.ok) text = await res.text();
-    } catch (e) { /* 忽略，使用内置首页 */ }
-
-    if (!text) {
-      article.innerHTML = builtinHome();
-      if (state.anchor) scrollToAnchor(state.anchor);
-      return;
-    }
-    renderInto(text, CFG.home, { isHome: true });
-    appendHomePanels();
-    if (state.anchor) scrollToAnchor(state.anchor);
-  }
-
-  async function openNote(path, anchor) {
-    state.current = path;
-    state.anchor = anchor || '';
-    expandAncestors(path);
-    updateActive(path);
-
-    var article = $('#article');
-    article.classList.remove('home');
-    article.innerHTML = skeletonHtml();
-    $('#pager').innerHTML = '';
-    $('#toc').innerHTML = '';
-    $('#edit-link').hidden = true;
-    setBreadcrumb(path);
-    scrollTop(false);
-
-    try {
-      var res = await fetch('./' + encodePath(path), { cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       var text = await res.text();
-      renderInto(text, path, { isHome: false });
-      if (state.anchor) scrollToAnchor(state.anchor);
+      if (seq !== state.routeSeq) return;
+      var parsed = splitFrontMatter(text);
+      var body = stripLeadingH1(parsed.body, state.site.title);
+      doc.innerHTML = '';
+      renderMarkdown(doc, body, CFG.home, { isHome: true, skipMeta: true });
+      buildToc(doc);
     } catch (e) {
-      renderNotFound(path, e);
+      if (seq !== state.routeSeq) return;
+      doc.innerHTML = builtinHome();
+      renderToc([]);
     }
+
+    requestAnchorScroll(anchor);
+  }
+
+  function builtinHome() {
+    return '<div class="state-box"><h2>欢迎使用你的学习笔记站</h2>' +
+      '<p>首页文件 <code>' + escapeHtml(CFG.home) + '</code> 暂时没有读取到，但不影响浏览笔记。</p>' +
+      '<ol>' +
+      '<li>在仓库中按 <code>学习方向/内容/细节.md</code> 新建 Markdown 文件；</li>' +
+      '<li>运行 <code>scripts/build-manifest.ps1</code>（或等待 GitHub Action）更新索引；</li>' +
+      '<li>刷新页面即可在左侧目录看到新笔记。</li>' +
+      '</ol></div>';
+  }
+
+  /* ------------------------------------------------------------- 读取笔记 */
+  function updateWindowTitle(title, path, icon) {
+    var winTitle = $('#win-title');
+    var winPath = $('#win-path');
+    var winIcon = $('#win-icon');
+
+    state.currentTitle = title || '';
+    state.currentIcon = icon || (title ? iconFor(path) : (state.site.brandIcon || DEFAULTS.brandIcon));
+
+    if (winTitle) winTitle.textContent = title || state.site.title;
+    if (winPath) winPath.textContent = title ? (dirName(path) || '根目录') : '首页';
+    if (winIcon) {
+      winIcon.hidden = false;
+      setBadge(winIcon, state.currentIcon);
+    }
+    if (title) refreshDocTitle();
   }
 
   function setBreadcrumb(path) {
     var el = $('#breadcrumb');
     if (!el) return;
-    if (!path) { el.innerHTML = '<span class="current">首页</span>'; return; }
-    var parts = path.split('/');
-    var html = '<a href="#/">首页</a>';
-    parts.forEach(function (part, i) {
-      var last = i === parts.length - 1;
-      var label = last ? displayName(part) : part;
-      html += '<span class="sep">/</span>' +
-        (last ? '<span class="current">' : '<span>') + escapeHtml(label) + '</span>';
-    });
+
+    var html = '<a href="' + toHash('') + '">🏠 首页</a>';
+
+    if (path) {
+      var parts = path.split('/');
+      var dirs = parts.slice(0, -1);
+      var acc = [];
+      dirs.forEach(function (name) {
+        acc.push(name);
+        html += '<span class="sep">›</span><span title="' + escapeHtml(acc.join('/')) + '">' +
+          escapeHtml(displayName(name)) + '</span>';
+      });
+      html += '<span class="sep">›</span><span class="current">' +
+        escapeHtml(fileTitle(state.fileMap.get(path) || { path: path })) + '</span>';
+    } else {
+      html = '<span class="current">🏠 首页</span>';
+    }
+
     el.innerHTML = html;
+  }
+
+  function setEditLink(path) {
+    var link = $('#edit-link');
+    if (!link) return;
+    var url = state.repo && path
+      ? 'https://github.com/' + state.repo.owner + '/' + state.repo.repo + '/edit/' +
+        encodeURIComponent(state.repo.branch) + '/' + path.split('/').map(encodeURIComponent).join('/')
+      : '';
+    if (url) {
+      link.href = url;
+      link.hidden = false;
+    } else {
+      link.removeAttribute('href');
+      link.hidden = true;
+    }
+  }
+
+  function loadNote(path, anchor) {
+    var file = state.fileMap.get(path);
+    var article = $('#article');
+    if (!file || !article) { renderNotFound(path); return; }
+    var seq = ++state.routeSeq;
+
+    state.current = path;
+    state.currentFm = null;
+
+    var icon = iconFor(path);
+    article.classList.remove('home-view');
+    article.innerHTML = '<div class="skeleton" aria-hidden="true">' +
+      '<span></span><span></span><span></span><span></span></div>';
+
+    updateActive(path);
+    setBreadcrumb(path);
+    updateWindowTitle(fileTitle(file), path, icon);
+    refreshDocTitle();
+    renderPager(path);
+    renderToc([]);
+    setEditLink(path);
+    renderFootUpdated(path, null);
+    scrollTop(false);
+
+    fetch('./' + encodePath(path), { cache: 'no-store' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+      })
+      .then(function (text) {
+        if (seq !== state.routeSeq) return;
+        renderNote(text, path);
+        requestAnchorScroll(anchor);
+      })
+      .catch(function (err) {
+        if (seq !== state.routeSeq) return;
+        article.innerHTML = '<div class="state-box"><h2>读取失败</h2>' +
+          '<p>没能读取 <code>' + escapeHtml(path) + '</code>' +
+          (err && err.message ? '（' + escapeHtml(err.message) + '）' : '') + '。</p>' +
+          '<p>请确认文件存在，并运行 <code>scripts/build-manifest.ps1</code> 更新索引。</p>' +
+          '<p><a class="btn primary" href="' + toHash('') + '">返回首页</a></p></div>';
+      });
+  }
+
+  function stripLeadingH1(body, title) {
+    var match = /^\s*#\s+([^\n]+)\n?/.exec(body);
+    if (!match) return body;
+    var heading = match[1].replace(/[*_`~]/g, '').replace(/\s+#+\s*$/, '').trim();
+    var a = heading.replace(/\s+/g, '').toLowerCase();
+    var b = String(title || '').replace(/\s+/g, '').toLowerCase();
+    if (a && b && (a === b || a.indexOf(b) !== -1 || b.indexOf(a) !== -1)) {
+      return body.slice(match[0].length).replace(/^\s*\n/, '');
+    }
+    return body;
+  }
+
+  function readingTime(body) {
+    var text = String(body || '')
+      .replace(/```[\s\S]*?```/g, ' ')
+      .replace(/`[^`]*`/g, ' ')
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/[#>*_~|]/g, ' ');
+    var cjk = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+    var words = (text.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[A-Za-z0-9]+/g) || []).length;
+    return Math.max(1, Math.round(cjk / 350 + words / 220));
+  }
+
+  function renderNote(text, path) {
+    var file = state.fileMap.get(path) || { path: path };
+    var parsed = splitFrontMatter(text);
+    var fm = parsed.data || {};
+
+    if (fm.icon) file.icon = String(fm.icon).trim();
+    if (fm.title) file.title = String(fm.title).trim();
+    if (fm.date) file.date = String(fm.date).trim();
+    if (fm.updated) file.lastModified = String(fm.updated).trim();
+
+    var title = file.title || displayName(baseName(path));
+    var icon = iconFor(path, fm.icon);
+    var body = stripLeadingH1(parsed.body, title);
+
+    text = null;
+    state.currentFm = fm;
+
+    var article = $('#article');
+    if (!article) return;
+    article.classList.remove('home-view');
+    article.innerHTML = '';
+    article.appendChild(buildArticleHead(title, path, fm, body));
+
+    var content = document.createElement('div');
+    content.className = 'md-content';
+    article.appendChild(content);
+    renderMarkdown(content, body, path, {});
+    buildToc(content);
+
+    updateWindowTitle(title, path, icon);
+    refreshDocTitle();
+    setBreadcrumb(path);
+    updateActive(path);
+    renderPager(path);
+    setEditLink(path);
+    renderFootUpdated(path, fm);
+
+    var link = state.navMap.get(path);
+    if (link) {
+      var label = $('.nav-link-text', link);
+      if (label) label.textContent = title;
+      setBadge($('.page-badge', link), icon);
+    }
+  }
+
+  function buildArticleHead(title, path, fm, body) {
+    var icon = iconFor(path, fm.icon);
+    var date = formatDate(fm.updated || fm.date || (state.fileMap.get(path) || {}).date);
+    var tags = Array.isArray(fm.tags) ? fm.tags : [];
+    var desc = fm.description || fm.summary || fm.desc || '';
+
+    var chips = '<span class="meta-chip">📂 ' + escapeHtml(dirName(path) || '根目录') + '</span>';
+    if (date) chips += '<span class="meta-chip">📅 ' + escapeHtml(date) + '</span>';
+    chips += '<span class="meta-chip">⏱ ' + readingTime(body) + ' 分钟</span>';
+    tags.slice(0, 6).forEach(function (tag) {
+      chips += '<span class="meta-chip">#' + escapeHtml(tag) + '</span>';
+    });
+
+    var head = document.createElement('header');
+    head.className = 'article-head';
+    head.innerHTML = '<h1 class="article-title">' +
+      '<span class="page-badge" aria-hidden="true">' + icon + '</span>' +
+      '<span class="article-title-text">' + escapeHtml(title) + '</span></h1>' +
+      '<div class="article-meta">' + chips + '</div>' +
+      (desc ? '<p class="article-desc">' + escapeHtml(desc) + '</p>' : '');
+    return head;
   }
 
   function renderPager(path) {
     var el = $('#pager');
     if (!el) return;
-    el.innerHTML = '';
-    if (!state.flat.length) return;
-    var idx = -1;
-    for (var i = 0; i < state.flat.length; i++) {
-      if (state.flat[i].path === path) { idx = i; break; }
+    if (!path || !state.flat.length) { el.innerHTML = ''; return; }
+
+    var index = -1;
+    state.flat.forEach(function (f, i) { if (f.path === path) index = i; });
+    if (index < 0) { el.innerHTML = ''; return; }
+
+    var prev = index > 0 ? state.flat[index - 1] : null;
+    var next = index < state.flat.length - 1 ? state.flat[index + 1] : null;
+
+    function item(file, cls, label) {
+      if (!file) return '<span class="pager-link ' + cls + '" aria-hidden="true"></span>';
+      return '<a class="pager-link ' + cls + '" href="' + toHash(file.path) + '">' +
+        '<span class="pg-dir">' + label + '</span>' +
+        '<span class="pg-title">' + escapeHtml(fileTitle(file)) + '</span></a>';
     }
-    if (idx < 0) return;
-    var prev = state.flat[idx - 1];
-    var next = state.flat[idx + 1];
-    el.appendChild(prev ? pagerLink(prev, '上一篇', 'prev') : document.createElement('span'));
-    if (next) el.appendChild(pagerLink(next, '下一篇', 'next'));
+
+    el.innerHTML = item(prev, 'pg-prev', '← 上一篇') + item(next, 'pg-next', '下一篇 →');
   }
 
-  function pagerLink(file, label, cls) {
-    var a = document.createElement('a');
-    a.href = toHash(file.path);
-    a.className = cls;
-    a.innerHTML = '<span class="dir">' + label + ' · ' + escapeHtml(dirName(file.path) || '根目录') + '</span>' +
-      '<span class="name">' + escapeHtml(file.title || displayName(baseName(file.path))) + '</span>';
-    return a;
+  function renderToc(items) {
+    var el = $('#toc');
+    if (!el) return;
+    if (!items || !items.length) {
+      el.innerHTML = '<div class="toc-empty">本页暂无小标题</div>';
+      return;
+    }
+    el.innerHTML = items.map(function (item) {
+      return '<a class="toc-h' + item.level + '" href="' + toHash(state.current, item.id) +
+        '" data-target="' + escapeHtml(item.id) + '">' + escapeHtml(item.text) + '</a>';
+    }).join('');
   }
 
-  function updateEditLink(path) {
-    var a = $('#edit-link');
-    if (!a) return;
-    var repo = state.repo;
-    if (!path || path === CFG.home || !repo || !repo.owner || !repo.repo) { a.hidden = true; return; }
-    a.hidden = false;
-    a.href = 'https://github.com/' + repo.owner + '/' + repo.repo + '/edit/' +
-      CFG.branch + '/' + encodePath(path);
-  }
+  function renderNotFound(path) {
+    state.routeSeq += 1;
+    state.current = path;
+    state.currentTitle = '页面不存在';
+    refreshDocTitle();
+    updateActive(path);
+    setBreadcrumb(path || '');
+    updateWindowTitle('未找到该笔记', path || '', '🧭');
+    renderPager('');
+    renderToc([]);
+    setEditLink('');
+    renderFootUpdated('', null);
+    var foot = $('#foot-updated');
+    if (foot) { foot.hidden = true; foot.innerHTML = ''; }
 
-  function scrollToAnchor(id) {
-    if (!id) return;
-    var target = document.getElementById(id);
-    if (!target) return;
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    target.classList.add('flash');
-    setTimeout(function () { target.classList.remove('flash'); }, 1200);
-  }
-
-  function renderNotFound(path, err) {
     var article = $('#article');
-    article.classList.remove('home');
-    var repo = state.repo;
-    var gh = '';
-    if (repo && repo.owner && repo.repo) {
-      gh = '<p><a class="btn" target="_blank" rel="noopener" href="https://github.com/' +
-        repo.owner + '/' + repo.repo + '/blob/' + CFG.branch + '/' + encodePath(path) +
-        '">在 GitHub 查看该文件</a></p>';
+    if (article) {
+      article.classList.remove('home-view');
+      article.innerHTML = '<div class="state-box"><h2>找不到这篇笔记</h2>' +
+        '<p><code>' + escapeHtml(path || '') + '</code> 不在当前索引里，可能已被移动或重命名。</p>' +
+        '<p>可以回到首页，或在左侧目录重新选择。</p>' +
+        '<p><a class="btn primary" href="' + toHash('') + '">返回首页</a></p></div>';
     }
-    var hint = state.files.length ? '' :
-      '<p>目录索引为空，若是刚建的仓库，请等待一次 GitHub Action 运行完成，或手动执行 ' +
-      '<code>scripts/build-manifest.ps1</code> 后提交 <code>manifest.json</code>。</p>';
-    article.innerHTML = '<div class="state-box"><h2>找不到这篇笔记</h2>' +
-      '<p>路径：<code>' + escapeHtml(path) + '</code>' + (err && err.message ? '（' + escapeHtml(err.message) + '）' : '') + '</p>' +
-      '<p>可能原因：文件被重命名、还没有推送到仓库，或 <code>manifest.json</code> 索引尚未更新。</p>' +
-      hint +
-      '<div class="actions"><a class="btn primary" href="#/">返回首页</a>' +
-      '<button type="button" class="btn" id="retry-note">重试</button></div>' + gh + '</div>';
-    var retry = $('#retry-note');
-    if (retry) retry.addEventListener('click', function () { openNote(path, state.anchor); });
-    document.title = '未找到 · ' + CFG.title;
-    setBreadcrumb(path);
   }
 
-  /* ------------------------------------------------------------- 渲染正文 */
-  function renderInto(markdown, path, opts) {
+  /* ------------------------------------------------------------- 更新时间 */
+  function latestSiteDate() {
+    var dates = state.files.map(function (f) {
+      return formatDate(f.lastModified || f.date);
+    }).filter(Boolean);
+    dates.sort();
+    return dates.length ? dates[dates.length - 1] : '';
+  }
+
+  function renderFootUpdated(path, fm) {
+    var el = $('#foot-updated');
+    if (!el) return;
+
+    if (CFG.showLastModified === false) {
+      el.hidden = true;
+      el.innerHTML = '';
+      return;
+    }
+
+    var date = '';
+    if (fm) date = formatDate(fm.updated);
+    if (!date && path) {
+      var file = state.fileMap.get(path);
+      if (file) {
+        var fallback = (fm && fm.date) || file.date;
+        date = formatDate(file.lastModified || fallback);
+      }
+    }
+    if (!date && fm) date = formatDate(fm.date);
+    if (!path) date = latestSiteDate();
+
+    if (!date) {
+      el.hidden = true;
+      el.innerHTML = '';
+      return;
+    }
+
+    el.hidden = false;
+    el.innerHTML = (path ? '最近更新：' : '全站最近更新：') +
+      '<span class="fu-date">' + escapeHtml(date) + '</span>' +
+      '<span class="fu-live" id="fu-live"></span>';
+
+    if (path && CFG.liveLastModified !== false && state.repo) fetchCommitDate(path);
+  }
+
+  function fetchCommitDate(path) {
+    if (state.commitCache.has(path)) {
+      paintCommit(path, state.commitCache.get(path));
+      return;
+    }
+
+    var url = 'https://api.github.com/repos/' + state.repo.owner + '/' + state.repo.repo +
+      '/commits?path=' + encodeURIComponent(path) +
+      '&sha=' + encodeURIComponent(state.repo.branch) + '&per_page=1';
+
+    fetch(url, { headers: { Accept: 'application/vnd.github+json' } })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (list) {
+        if (!Array.isArray(list) || !list.length) return;
+        var commit = list[0].commit || {};
+        var iso = (commit.committer && commit.committer.date) ||
+          (commit.author && commit.author.date) || '';
+        if (!iso) return;
+        state.commitCache.set(path, iso);
+        paintCommit(path, iso);
+      })
+      .catch(function () { /* 未登录 / 超限时静默忽略 */ });
+  }
+
+  function paintCommit(path, iso) {
+    if (state.current !== path) return;
+    var live = $('#fu-live');
+    if (!live) return;
+    var rel = relTime(iso);
+    live.textContent = ' · Git 提交 ' + formatDate(iso) + (rel ? '（' + rel + '）' : '');
+  }
+
+  /* ------------------------------------------------------------- 渲染 Markdown */
+  function renderMarkdown(container, markdown, path, opts) {
     opts = opts || {};
-    var article = $('#article');
-    var parsed = splitFrontMatter(markdown);
-    var title = parsed.data.title || displayName(baseName(path));
-    article.classList.toggle('home', !!opts.isHome);
+    var linkPath = opts.isHome ? '' : path;
 
     if (!window.marked) {
-      article.innerHTML = '<div class="state-box"><h2>Markdown 渲染库未加载</h2>' +
+      container.innerHTML = '<div class="state-box"><h2>Markdown 渲染库未加载</h2>' +
         '<p>请检查能否访问 <code>cdn.jsdelivr.net</code>（公司网络 / 离线环境可能被拦截），' +
         '或把这些依赖下载到本地后修改 <code>index.html</code> 中的引用地址。</p>' +
-        '<pre>' + escapeHtml(parsed.body.slice(0, 2000)) + '</pre></div>';
+        '<pre>' + escapeHtml(String(markdown).slice(0, 2000)) + '</pre></div>';
       return;
     }
 
     var html;
     try {
-      html = window.marked.parse(parsed.body, { gfm: true, breaks: false });
+      html = window.marked.parse(markdown, { gfm: true, breaks: false });
     } catch (e) {
-      article.innerHTML = '<div class="state-box"><h2>Markdown 解析失败</h2><p>' +
+      container.innerHTML = '<div class="state-box"><h2>Markdown 解析失败</h2><p>' +
         escapeHtml(e.message) + '</p></div>';
       return;
     }
-    article.innerHTML = html;
 
-    var linkPath = opts.isHome ? '' : path;
-    decorateHeadings(article, linkPath);
-    decorateAlerts(article);
-    decorateTables(article);
-    resolveLinks(article, path);
-    enhanceMermaid(article);
-    enhanceCode(article);
-    enhanceMath(article);
-    buildToc(article, linkPath);
-    renderMeta(article, parsed.data);
-
-    if (!opts.isHome) {
-      document.title = title + ' · ' + CFG.title;
-      setBreadcrumb(path);
-      renderPager(path);
-      updateEditLink(path);
-    } else {
-      document.title = CFG.title;
-    }
+    container.innerHTML = html;
+    decorateHeadings(container, linkPath);
+    decorateAlerts(container);
+    decorateTables(container);
+    resolveLinks(container, path, linkPath);
+    enhanceMermaid(container);
+    enhanceCode(container);
+    enhanceMath(container);
   }
 
-  function splitFrontMatter(text) {
-    var data = {};
-    var body = String(text || '');
-    var match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(body);
-    if (!match) return { data: data, body: body };
-
-    match[1].split(/\r?\n/).forEach(function (line) {
-      var m = /^\s*([A-Za-z0-9_\-]+)\s*:\s*(.*)$/.exec(line);
-      if (!m) return;
-      var value = m[2].trim().replace(/^["']|["']$/g, '');
-      if (value.charAt(0) === '[' && value.charAt(value.length - 1) === ']') {
-        value = value.slice(1, -1).split(',').map(function (s) {
-          return s.trim().replace(/^["']|["']$/g, '');
-        }).filter(Boolean);
-      }
-      data[m[1]] = value;
-    });
-
-    return { data: data, body: body.slice(match[0].length) };
-  }
-
-  var CALENDAR_ICON = '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">' +
-    '<path fill="currentColor" d="M5 1a.5.5 0 0 1 .5.5V2h5v-.5a.5.5 0 0 1 1 0V2h1.5A1.5 1.5 0 0 1 14.5 3.5v10A1.5 1.5 0 0 1 13 15H3A1.5 1.5 0 0 1 1.5 13.5v-10A1.5 1.5 0 0 1 3 2h1.5v-.5A.5.5 0 0 1 5 1zM2.5 6v7.5a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V6h-11z"/>' +
-    '</svg>';
-
-  function renderMeta(article, fm) {
-    var bits = [];
-    if (fm.date) bits.push('<span class="meta-item">' + CALENDAR_ICON + escapeHtml(formatDate(fm.date)) + '</span>');
-    if (fm.tags && fm.tags.length) {
-      var tags = Array.isArray(fm.tags) ? fm.tags : String(fm.tags).split(/[,，\s]+/).filter(Boolean);
-      if (tags.length) {
-        bits.push('<span class="meta-tags">' + tags.map(function (t) {
-          return '<span class="tag">' + escapeHtml(t) + '</span>';
-        }).join('') + '</span>');
-      }
-    }
-    if (!bits.length) return;
-    var div = document.createElement('div');
-    div.className = 'note-meta';
-    div.innerHTML = bits.join('');
-    article.insertBefore(div, article.firstChild);
-  }
-
-  /* ------------------------------------------------------------- 标题 / 目录 */
   function slugify(text) {
     return String(text).trim().toLowerCase()
       .replace(/[\s\u00a0]+/g, '-')
@@ -752,8 +1247,8 @@
       .replace(/^-|-$/g, '');
   }
 
-  function decorateHeadings(article, path) {
-    var heads = $$('h1, h2, h3, h4', article);
+  function decorateHeadings(container, linkPath) {
+    var heads = $$('h1, h2, h3, h4', container);
     var used = Object.create(null);
     heads.forEach(function (h) {
       var base = slugify(h.textContent) || 'section';
@@ -765,7 +1260,7 @@
 
       var a = document.createElement('a');
       a.className = 'anchor';
-      a.href = toHash(path, id);
+      a.href = toHash(linkPath, id);
       a.setAttribute('aria-label', '本节链接');
       a.title = '本节链接';
       a.textContent = '#';
@@ -775,38 +1270,16 @@
 
   var tocObserver = null;
 
-  function buildToc(article, path) {
-    var toc = $('#toc');
-    if (!toc) return;
-    toc.innerHTML = '';
-
-    var heads = $$('h2, h3', article).filter(function (h) { return h.id; });
-    if (!heads.length) {
-      toc.innerHTML = '<div class="toc-empty">本页暂无小节</div>';
-      return;
-    }
-
-    var ul = document.createElement('ul');
-    heads.forEach(function (h) {
-      var li = document.createElement('li');
-      li.className = 'lvl-' + h.tagName.charAt(1);
-      var a = document.createElement('a');
-      a.href = toHash(path, h.id);
-      a.textContent = h.textContent.replace(/#\s*$/, '').trim();
-      a.dataset.target = h.id;
-      a.addEventListener('click', function (e) {
-        e.preventDefault();
-        state.anchor = h.id;
-        if (window.history && history.replaceState) {
-          history.replaceState(null, '', toHash(path, h.id));
-        }
-        scrollToAnchor(h.id);
-      });
-      li.appendChild(a);
-      ul.appendChild(li);
+  function buildToc(container) {
+    var heads = $$('h2, h3, h4', container).filter(function (h) { return h.id; });
+    var items = heads.map(function (h) {
+      return {
+        level: parseInt(h.tagName.charAt(1), 10),
+        id: h.id,
+        text: h.textContent.replace(/#\s*$/, '').trim()
+      };
     });
-    toc.appendChild(ul);
-
+    renderToc(items);
     setupTocObserver(heads);
   }
 
@@ -872,7 +1345,7 @@
     });
   }
 
-  function resolveLinks(article, notePath) {
+  function resolveLinks(article, notePath, linkPath) {
     var dir = dirName(notePath);
     var dirPrefix = dir ? dir + '/' : '';
 
@@ -890,7 +1363,7 @@
       }
 
       if (raw.charAt(0) === '#') {
-        a.setAttribute('href', toHash(notePath, safeDecode(raw.slice(1))));
+        a.setAttribute('href', toHash(linkPath, safeDecode(raw.slice(1))));
         return;
       }
 
@@ -923,7 +1396,7 @@
     try { return decodeURI(str); } catch (e) { return str; }
   }
 
-  /* ------------------------------------------------------------- 代码 / 图表 / 公式 */
+  /* --------------------------------------------------------- 代码 / 图表 / 公式 */
   function copyText(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       return navigator.clipboard.writeText(text).then(function () { return true; }).catch(function () {
@@ -1053,325 +1526,528 @@
     } catch (e) { /* 公式渲染失败时保留原文 */ }
   }
 
-  /* ------------------------------------------------------------- 首页扩展 */
-  function firstFile(node) {
-    for (var i = 0; i < node.children.length; i++) {
-      var child = node.children[i];
-      if (child.type === 'file') return child.file;
-      var nested = firstFile(child);
-      if (nested) return nested;
-    }
-    return null;
-  }
-
-  function appendHomePanels() {
-    var prev = $('#home-panels');
-    if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
-    if (!state.files.length || !state.tree) return;
-
-    var main = $('#main');
-    var foot = $('.page-foot', main);
-    if (!main || !foot) return;
-
-    var dirs = collectDirs(state.tree, []);
-    var topDirs = state.tree.children.filter(function (c) { return c.type === 'dir'; });
-    var dated = state.files.filter(function (f) { return f.date; })
-      .sort(function (a, b) { return b.date.localeCompare(a.date); });
-    var latest = dated.length ? dated[0].date : '';
-
-    var panels = document.createElement('div');
-    panels.id = 'home-panels';
-    panels.className = 'home-panels';
-
-    var html = '<h2>内容概览</h2><div class="stat-row">' +
-      '<div class="stat-card"><span class="num">' + state.files.length + '</span><span class="label">篇笔记</span></div>' +
-      '<div class="stat-card"><span class="num">' + topDirs.length + '</span><span class="label">个学习方向</span></div>' +
-      '<div class="stat-card"><span class="num">' + dirs.length + '</span><span class="label">个分类目录</span></div>' +
-      '<div class="stat-card"><span class="num" style="font-size:18px">' + (latest || '—') +
-      '</span><span class="label">最近更新</span></div>' +
-      '</div>';
-
-    if (topDirs.length) {
-      html += '<h2>学习方向</h2><div class="dir-chips">';
-      topDirs.forEach(function (dir) {
-        var first = firstFile(dir);
-        html += '<a class="dir-chip" href="' + (first ? toHash(first.path) : '#/') + '">' +
-          escapeHtml(displayName(dir.name)) + '<span class="count">' + countFiles(dir) + ' 篇</span></a>';
-      });
-      html += '</div>';
-    }
-
-    if (dated.length) {
-      html += '<h2>最近更新</h2><ul class="recent-list">';
-      dated.slice(0, 8).forEach(function (f) {
-        html += '<li><span class="r-date">' + escapeHtml(f.date) + '</span><span>' +
-          '<a class="r-title" href="' + toHash(f.path) + '">' +
-          escapeHtml(f.title || displayName(baseName(f.path))) + '</a>' +
-          '<span class="r-path">' + escapeHtml(dirName(f.path) || '根目录') + '</span></span></li>';
-      });
-      html += '</ul>';
-    }
-
-    panels.innerHTML = html;
-    main.insertBefore(panels, foot);
-  }
-
-  function builtinHome() {
-    var repo = state.repo || {};
-    var url = repo.owner && repo.repo ? 'https://github.com/' + repo.owner + '/' + repo.repo : '';
-    return '<div class="state-box"><h2>欢迎使用你的学习笔记站</h2>' +
-      '<p>首页文件 <code>' + escapeHtml(CFG.home) + '</code> 暂时没有读取到，但不影响浏览笔记。</p>' +
-      '<ol>' +
-      '<li>在仓库中按 <code>学习方向/内容/细节.md</code> 新建 Markdown 文件；</li>' +
-      '<li>运行 <code>scripts/build-manifest.ps1</code>（或等待 GitHub Action）更新索引；</li>' +
-      '<li>刷新页面即可在左侧目录看到新笔记。</li>' +
-      '</ol>' +
-      (url ? '<p><a class="btn primary" href="' + url + '" target="_blank" rel="noopener">打开 GitHub 仓库</a></p>' : '') +
-      '</div>';
-  }
-
-  /* ------------------------------------------------------------- 主题 / 交互 */
-  function applyTheme(theme, initial) {
-    var mode = theme === 'dark' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', mode);
-    if (!initial) store('ln-theme', mode);
+  /* ------------------------------------------------------------- 主题 / UI 状态 */
+  function applyTheme(mode, silent) {
+    var dark = mode === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
 
     var light = $('#hljs-light');
-    var darkLink = $('#hljs-dark');
-    if (light) light.disabled = mode === 'dark';
-    if (darkLink) darkLink.disabled = mode !== 'dark';
+    var darkSheet = $('#hljs-dark');
+    if (light) light.disabled = dark;
+    if (darkSheet) darkSheet.disabled = !dark;
 
-    var btn = $('#theme-btn');
-    if (btn) {
-      btn.textContent = mode === 'dark' ? '☀️' : '🌙';
-      btn.setAttribute('aria-label', mode === 'dark' ? '切换到浅色主题' : '切换到深色主题');
-    }
-    if (!initial) rerenderMermaid();
-  }
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', dark ? '#1e1e21' : '#eef3fb');
 
-  function toggleSidebar(force) {
-    var open = typeof force === 'boolean' ? force : !document.body.classList.contains('sidebar-open');
-    document.body.classList.toggle('sidebar-open', open);
-
-    var overlay = $('#overlay');
-    if (overlay) overlay.hidden = !open;
-
-    var btn = $('#menu-btn');
-    if (btn) {
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      btn.setAttribute('aria-label', open ? '关闭目录' : '打开目录');
-    }
-  }
-
-  function closeSidebar() { toggleSidebar(false); }
-
-  function onNavClick(e) {
-    var dirBtn = e.target.closest ? e.target.closest('.nav-dir') : null;
-    if (dirBtn) { toggleDir(dirBtn.dataset.path); return; }
-    var fileLink = e.target.closest ? e.target.closest('.nav-file') : null;
-    if (fileLink) closeSidebar();
-  }
-
-  function onScroll() {
-    var doc = document.documentElement;
-    var max = doc.scrollHeight - window.innerHeight;
-    var pct = max > 0 ? (window.pageYOffset / max) * 100 : 0;
-    var bar = $('#progress');
-    if (bar) bar.style.width = Math.max(0, Math.min(100, pct)) + '%';
-    var top = $('#top-btn');
-    if (top) top.hidden = window.pageYOffset < 420;
-  }
-
-  function bindUi() {
-    var menuBtn = $('#menu-btn');
-    if (menuBtn) menuBtn.addEventListener('click', function () { toggleSidebar(); });
-
-    var overlay = $('#overlay');
-    if (overlay) overlay.addEventListener('click', closeSidebar);
-
-    var themeBtn = $('#theme-btn');
-    if (themeBtn) {
-      themeBtn.addEventListener('click', function () {
-        applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-      });
-    }
-
-    var expandBtn = $('#expand-btn');
-    if (expandBtn) expandBtn.addEventListener('click', toggleExpandAll);
-
-    var topBtn = $('#top-btn');
-    if (topBtn) topBtn.addEventListener('click', function () { scrollTop(); });
-
-    var nav = $('#nav');
-    if (nav) nav.addEventListener('click', onNavClick);
-
-    var search = $('#search');
-    if (search) {
-      var onInput = debounce(function () { runSearch(search.value); }, 220);
-      search.addEventListener('input', onInput);
-      search.addEventListener('focus', function () { runSearch(search.value); });
-      search.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') {
-          var first = $('#search-results .search-item');
-          if (first) { e.preventDefault(); first.click(); }
-        }
-        if (e.key === 'Escape') { search.value = ''; hideSearch(true); search.blur(); }
-      });
-    }
-
-    document.addEventListener('click', function (e) {
-      var wrap = $('.search-wrap');
-      if (wrap && !wrap.contains(e.target)) hideSearch(false);
-    });
-
-    document.addEventListener('keydown', function (e) {
-      var active = document.activeElement;
-      var tag = active ? active.tagName : '';
-      var typing = /^(INPUT|TEXTAREA|SELECT)$/.test(tag) || (active && active.isContentEditable);
-      if (e.key === '/' && !typing) {
-        e.preventDefault();
-        if (search) { search.focus(); search.select(); }
+    store('ln-theme', dark ? 'dark' : 'light');
+    $$('#theme-btn, #mb-theme, #dock-theme').forEach(function (btn) {
+      if (btn.id === 'mb-theme') {
+        var label = btn.querySelector('span');
+        if (label) label.textContent = dark ? '切换浅色模式' : '切换深色模式';
+        btn.firstChild.nodeValue = dark ? '☀️ ' : '🌙 ';
+      } else {
+        btn.textContent = dark ? '☀️' : '🌙';
+        btn.title = dark ? '切换到浅色模式' : '切换到深色模式';
       }
-      if (e.key === 'Escape') closeSidebar();
     });
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', debounce(onScroll, 150));
-    onScroll();
+    var isMobile = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
+    if (!silent && !isMobile) rerenderMermaid();
   }
 
-  /* ------------------------------------------------------------- 搜索 */
-  function searchableText(text) {
+  function toggleTheme() {
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    applyTheme(dark ? 'light' : 'dark');
+  }
+
+  function restoreUiState() {
+    if (store('ln-sidebar-hidden') === '1') document.body.classList.add('sidebar-hidden');
+    document.body.classList.add('window-open');
+    document.body.classList.remove('window-closed');
+    if (document.body.classList.contains('sidebar-hidden')) {
+      var btn = $('#sidebar-btn');
+      if (btn) btn.setAttribute('aria-pressed', 'false');
+    }
+  }
+
+  function setSidebarHidden(hidden) {
+    document.body.classList.toggle('sidebar-hidden', hidden);
+    store('ln-sidebar-hidden', hidden ? '1' : '0');
+    var btn = $('#sidebar-btn');
+    if (btn) {
+      btn.setAttribute('aria-pressed', hidden ? 'false' : 'true');
+      btn.setAttribute('aria-label', hidden ? '显示目录' : '隐藏目录');
+    }
+  }
+
+  function toggleSidebar() {
+    if (window.innerWidth <= 940) {
+      toggleMobileSidebar();
+      return;
+    }
+    setSidebarHidden(!document.body.classList.contains('sidebar-hidden'));
+  }
+
+  function openMobileSidebar() {
+    document.body.classList.add('sidebar-open');
+    var overlay = $('#overlay');
+    if (overlay) overlay.hidden = false;
+    var menu = $('#menu-btn');
+    if (menu) menu.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeMobileSidebar() {
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.remove('search-open');
+    var overlay = $('#overlay');
+    if (overlay) overlay.hidden = true;
+    var menu = $('#menu-btn');
+    if (menu) menu.setAttribute('aria-expanded', 'false');
+  }
+
+  function toggleMobileSidebar() {
+    if (document.body.classList.contains('sidebar-open')) closeMobileSidebar();
+    else openMobileSidebar();
+  }
+
+  function openWindow() {
+    document.body.classList.remove('window-closed');
+    document.body.classList.add('window-open');
+    closeMobileSidebar();
+  }
+
+  function closeWindow() {
+    document.body.classList.add('window-closed');
+    document.body.classList.remove('window-open');
+    closeMobileSidebar();
+    hideSearch(true);
+  }
+
+  function toggleZoom() {
+    document.body.classList.toggle('zoomed');
+    var zoomed = document.body.classList.contains('zoomed');
+    toast(zoomed ? '窗口已铺满屏幕' : '窗口已还原');
+    window.requestAnimationFrame(function () {
+      if (state.anchor) scrollToAnchor(state.anchor, false);
+    });
+  }
+
+  function setMenuOpen(open) {
+    var details = $('#mb-menu');
+    if (details) details.open = !!open;
+  }
+
+  /* --------------------------------------------------------------- 搜索 */
+  var searchCursor = -1;
+
+  function searchText(text) {
     return String(text || '')
       .replace(/```[\s\S]*?```/g, ' ')
       .replace(/`[^`]*`/g, ' ')
       .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
       .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-      .replace(/(^|\s)#{1,6}\s+/g, ' ')
-      .replace(/[*_~>|]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+      .replace(/[#>*_~|]/g, ' ')
+      .replace(/\s+/g, ' ');
   }
 
   function loadCorpus() {
     if (state.corpusPromise) return state.corpusPromise;
-    state.corpusPromise = Promise.all(state.files.map(function (file) {
-      return fetch('./' + encodePath(file.path), { cache: 'force-cache' })
-        .then(function (res) { return res.ok ? res.text() : ''; })
-        .then(function (text) {
-          return { file: file, text: searchableText(splitFrontMatter(text).body) };
-        })
-        .catch(function () { return { file: file, text: '' }; });
-    })).then(function (items) {
-      state.corpus = items;
-      return items;
-    }).catch(function () {
-      state.corpusPromise = null;
-      return [];
+    if (!state.files.length) return Promise.resolve(null);
+
+    state.corpus = new Map();
+    state.corpusDone = false;
+    var queue = state.files.slice(0, 120);
+    var total = queue.length;
+    var active = 0;
+    var settled = 0;
+
+    state.corpusPromise = new Promise(function (resolve) {
+      function finish() {
+        if (settled === total) {
+          state.corpusDone = true;
+          resolve(state.corpus);
+        }
+      }
+      function next() {
+        if (!queue.length && active === 0) return;
+        while (active < 4 && queue.length) {
+          (function (file) {
+            active += 1;
+            fetch('./' + encodePath(file.path), { cache: 'force-cache' })
+              .then(function (res) { return res.ok ? res.text() : ''; })
+              .then(function (text) {
+                if (text) state.corpus.set(file.path, searchText(splitFrontMatter(text).body));
+              })
+              .catch(function () { /* 单篇失败不影响其他 */ })
+              .then(function () {
+                active -= 1;
+                settled += 1;
+                finish();
+                next();
+              });
+          })(queue.shift());
+        }
+      }
+      next();
     });
+
     return state.corpusPromise;
   }
 
-  function matchCorpus(corpus, lower) {
-    var out = [];
-    for (var i = 0; i < corpus.length && out.length < 12; i++) {
-      var item = corpus[i];
-      if (!item.text) continue;
-      var idx = item.text.toLowerCase().indexOf(lower);
-      if (idx < 0) continue;
-      var start = Math.max(0, idx - 40);
-      var end = Math.min(item.text.length, idx + lower.length + 70);
-      out.push({
-        file: item.file,
-        snippet: (start > 0 ? '…' : '') + item.text.slice(start, end) + (end < item.text.length ? '…' : '')
-      });
-    }
-    return out;
+  function excerptFor(path, query) {
+    if (!state.corpus || !state.corpus.has(path)) return '';
+    var text = state.corpus.get(path);
+    var idx = text.toLowerCase().indexOf(query);
+    if (idx < 0) return '';
+    var start = Math.max(0, idx - 28);
+    var snippet = text.slice(start, start + 96).trim();
+    return (start > 0 ? '…' : '') + snippet + (start + 96 < text.length ? '…' : '');
   }
 
-  function highlightText(text, query) {
-    var escaped = escapeHtml(text);
-    var needle = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    if (!needle) return escaped;
-    try {
-      return escaped.replace(new RegExp('(' + needle + ')', 'gi'), '<mark>$1</mark>');
-    } catch (e) { return escaped; }
-  }
+  function searchFiles(query) {
+    var q = query.trim().toLowerCase();
+    if (!q) return [];
+    var results = [];
 
-  function renderSearch(panel, query, titleHits, textHits, loading) {
-    var titlePaths = new Set(titleHits.map(function (f) { return f.path; }));
-    var html = '';
+    state.files.forEach(function (file) {
+      var title = fileTitle(file);
+      var lowerTitle = title.toLowerCase();
+      var lowerPath = file.path.toLowerCase();
+      var score = 0;
 
-    if (titleHits.length) {
-      html += '<div class="search-group-title">标题 / 路径匹配 · ' + titleHits.length + '</div>';
-      titleHits.slice(0, 20).forEach(function (f) {
-        var title = f.title || displayName(baseName(f.path));
-        html += '<a class="search-item" href="' + toHash(f.path) + '">' +
-          '<span class="si-title">' + highlightText(title, query) + '</span>' +
-          '<span class="si-path">' + highlightText(f.path, query) + '</span></a>';
+      if (lowerTitle === q) score = 120;
+      else if (lowerTitle.indexOf(q) === 0) score = 100;
+      else if (lowerTitle.indexOf(q) >= 0) score = 85;
+      else if (lowerPath.indexOf(q) >= 0) score = 60;
+
+      var tags = (file.tags || []).map(function (t) { return String(t).toLowerCase(); });
+      if (tags.indexOf(q) >= 0) score += 25;
+
+      var excerpt = excerptFor(file.path, q);
+      if (excerpt) score += 12;
+      if (!score) return;
+
+      results.push({
+        file: file,
+        title: title,
+        score: score,
+        excerpt: excerpt
       });
-    }
-
-    var bodyHits = textHits.filter(function (hit) { return !titlePaths.has(hit.file.path); });
-    if (bodyHits.length) {
-      html += '<div class="search-group-title">正文匹配 · ' + bodyHits.length + '</div>';
-      bodyHits.forEach(function (hit) {
-        var f = hit.file;
-        var title = f.title || displayName(baseName(f.path));
-        html += '<a class="search-item" href="' + toHash(f.path) + '">' +
-          '<span class="si-title">' + highlightText(title, query) + '</span>' +
-          '<span class="si-snippet">' + highlightText(hit.snippet, query) + '</span></a>';
-      });
-    }
-
-    if (!html) {
-      html = '<div class="search-empty">没有找到与「' + escapeHtml(query) + '」相关的笔记</div>';
-    }
-    if (loading && !bodyHits.length) {
-      html += '<div class="search-hint">正在检索全文…</div>';
-    }
-
-    panel.innerHTML = html;
-    panel.hidden = false;
-    $$('.search-item', panel).forEach(function (item) {
-      item.addEventListener('click', function () { hideSearch(true); });
-    });
-  }
-
-  async function runSearch(raw) {
-    var query = String(raw || '').trim();
-    var panel = $('#search-results');
-    var input = $('#search');
-    if (!panel || !input) return;
-    if (!query) { hideSearch(false); return; }
-
-    var lower = query.toLowerCase();
-    var titleHits = state.files.filter(function (f) {
-      var title = f.title || displayName(baseName(f.path));
-      return title.toLowerCase().indexOf(lower) !== -1 || f.path.toLowerCase().indexOf(lower) !== -1;
     });
 
-    var textHits = state.corpus ? matchCorpus(state.corpus, lower) : [];
-    renderSearch(panel, query, titleHits, textHits, !state.corpus);
-
-    if (!state.files.length) return;
-    var corpus = await loadCorpus();
-    if (!input.value.trim() || input.value.trim() !== query) return;
-    if (!corpus.length) return;
-    renderSearch(panel, query, titleHits, matchCorpus(corpus, lower), false);
+    results.sort(function (a, b) {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.title.localeCompare(b.title, 'zh-CN', { sensitivity: 'base' });
+    });
+    return results;
   }
 
-  function hideSearch(clearInput) {
-    var panel = $('#search-results');
-    if (panel) { panel.hidden = true; panel.innerHTML = ''; }
-    if (clearInput) {
+  function renderSearchResults(query) {
+    var box = $('#search-results');
+    if (!box) return;
+    searchCursor = -1;
+
+    if (!query.trim()) {
+      var recent = latestFiles(5);
+      box.innerHTML = recent.length
+        ? recent.map(function (f) {
+            return '<a class="sr-item" role="option" href="' + toHash(f.path) + '">' +
+              '<span class="sr-title">' + iconFor(f.path) + ' ' + escapeHtml(fileTitle(f)) + '</span>' +
+              '<span class="sr-path">' + escapeHtml(dirName(f.path) || '根目录') + '</span></a>';
+          }).join('')
+        : '<div class="sr-empty">输入关键词搜索笔记，按 <kbd>/</kbd> 可随时聚焦搜索框。</div>';
+      box.hidden = false;
+      return;
+    }
+
+    var results = searchFiles(query).slice(0, 12);
+    if (!results.length) {
+      var stillLoading = state.corpusPromise && !state.corpusDone;
+      box.innerHTML = '<div class="sr-empty">没有找到与「' + escapeHtml(query.trim()) + '」相关的笔记' +
+        (stillLoading ? '（正在读取全文…）' : '') + '</div>';
+      box.hidden = false;
+      if (stillLoading) loadCorpus().then(function () {
+        var input = $('#search');
+        if (input && input.value.trim() === query.trim()) renderSearchResults(query);
+      });
+      return;
+    }
+
+    box.innerHTML = results.map(function (r) {
+      return '<a class="sr-item" role="option" href="' + toHash(r.file.path) + '">' +
+        '<span class="sr-title">' + iconFor(r.file.path) + ' ' + escapeHtml(r.title) + '</span>' +
+        '<span class="sr-path">' + escapeHtml(r.excerpt || dirName(r.file.path) || '根目录') + '</span></a>';
+    }).join('');
+    box.hidden = false;
+  }
+
+  function hideSearch(force) {
+    var box = $('#search-results');
+    if (box) {
+      box.hidden = true;
+      box.innerHTML = '';
+    }
+    searchCursor = -1;
+    if (force) {
       var input = $('#search');
       if (input) input.value = '';
+      document.body.classList.remove('search-open');
     }
   }
 
+  function focusSearch() {
+    var input = $('#search');
+    if (!input) return;
+    document.body.classList.add('search-open');
+    input.focus();
+    input.select();
+    renderSearchResults(input.value);
+  }
 
+  function moveSearchCursor(step) {
+    var box = $('#search-results');
+    if (!box || box.hidden) return;
+    var items = $$('.sr-item', box);
+    if (!items.length) return;
+    searchCursor = (searchCursor + step + items.length) % items.length;
+    items.forEach(function (item, i) { item.classList.toggle('active', i === searchCursor); });
+    if (items[searchCursor].scrollIntoView) {
+      try { items[searchCursor].scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ }
+    }
+  }
 
+  /* ------------------------------------------------------------- UI 绑定 */
+  function bindUi() {
+    setupNavUi();
+    setupSearchUi();
+    setupWindowUi();
+    setupDockUi();
+    setupKeyboard();
+    setupScrollUi();
+
+    var overlay = $('#overlay');
+    if (overlay) overlay.addEventListener('click', closeMobileSidebar);
+
+    document.addEventListener('click', function (e) {
+      var menu = $('#mb-menu');
+      if (menu && menu.open && !menu.contains(e.target)) menu.open = false;
+      var wrap = $('#search-wrap');
+      if (wrap && !wrap.contains(e.target)) hideSearch(false);
+    });
+
+    window.addEventListener('resize', debounce(function () {
+      if (window.innerWidth > 940) closeMobileSidebar();
+      if (window.innerWidth > 760) document.body.classList.remove('search-open');
+    }, 120));
+  }
+
+  function setupNavUi() {
+    var nav = $('#nav');
+    if (nav) {
+      nav.addEventListener('click', function (e) {
+        var groupBtn = e.target.closest ? e.target.closest('.nav-group-btn') : null;
+        if (groupBtn) {
+          e.preventDefault();
+          var group = groupBtn.parentElement;
+          if (group) toggleDir(group.getAttribute('data-path'));
+          return;
+        }
+        if (e.target.closest && e.target.closest('.nav-link')) closeMobileSidebar();
+      });
+    }
+
+    $$('#menu-btn').forEach(function (btn) {
+      btn.addEventListener('click', toggleMobileSidebar);
+    });
+    $$('#sidebar-btn, #mb-sidebar').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        toggleSidebar();
+        setMenuOpen(false);
+      });
+    });
+    $$('#expand-btn, #mb-expand').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        toggleExpandAll();
+        setMenuOpen(false);
+        toast(allExpanded() ? '已展开全部目录' : '已收起全部目录');
+      });
+    });
+  }
+
+  function setupSearchUi() {
+    var input = $('#search');
+    var box = $('#search-results');
+    var runSearch = debounce(function () { renderSearchResults(input.value); }, 110);
+
+    if (input) {
+      input.addEventListener('focus', function () { renderSearchResults(input.value); });
+      input.addEventListener('input', runSearch);
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown') { e.preventDefault(); moveSearchCursor(1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); moveSearchCursor(-1); }
+        else if (e.key === 'Enter') {
+          e.preventDefault();
+          var items = box ? $$('.sr-item', box) : [];
+          var target = items[searchCursor >= 0 ? searchCursor : 0];
+          if (target) {
+            location.hash = target.getAttribute('href');
+            hideSearch(true);
+            input.blur();
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          hideSearch(true);
+          input.blur();
+        }
+      });
+    }
+
+    if (box) {
+      box.addEventListener('click', function (e) {
+        var item = e.target.closest ? e.target.closest('.sr-item') : null;
+        if (item) hideSearch(true);
+      });
+      box.addEventListener('mousemove', function (e) {
+        var item = e.target.closest ? e.target.closest('.sr-item') : null;
+        if (!item) return;
+        var items = $$('.sr-item', box);
+        searchCursor = items.indexOf(item);
+        items.forEach(function (el, i) { el.classList.toggle('active', i === searchCursor); });
+      });
+    }
+
+    $$('#search-toggle, #mb-search, #dock-search').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setMenuOpen(false);
+        openWindow();
+        focusSearch();
+      });
+    });
+  }
+
+  function setupWindowUi() {
+    var win = $('#window');
+    if (!win) return;
+
+    var close = $('#win-close');
+    if (close) close.addEventListener('click', function () {
+      closeWindow();
+      toast('窗口已关闭，可从程序坞重新打开');
+    });
+
+    var min = $('#win-min');
+    if (min) min.addEventListener('click', function () {
+      closeWindow();
+      toast('窗口已最小化到程序坞');
+    });
+
+    $$('#win-zoom, #mb-zoom').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setMenuOpen(false);
+        toggleZoom();
+      });
+    });
+
+    var reopen = $('#reopen-btn');
+    if (reopen) reopen.addEventListener('click', function () {
+      openWindow();
+      toast('窗口已重新打开');
+    });
+
+    win.addEventListener('dblclick', function (e) {
+      if (e.target.closest && e.target.closest('.titlebar') && !e.target.closest('.tb-btn, .tl, input, a, button')) {
+        toggleZoom();
+      }
+    });
+  }
+
+  function setupDockUi() {
+    var home = $('#dock-home');
+    if (home) home.addEventListener('click', function () {
+      openWindow();
+      if (location.hash.replace(/^#\/?/, '') !== '') location.hash = '#/';
+      else renderHome('');
+    });
+
+    var top = $('#dock-top');
+    if (top) top.addEventListener('click', function () {
+      openWindow();
+      scrollTop();
+    });
+
+    $$('#theme-btn, #mb-theme, #dock-theme').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setMenuOpen(false);
+        toggleTheme();
+      });
+    });
+  }
+
+  function setupKeyboard() {
+    document.addEventListener('keydown', function (e) {
+      if (e.isComposing) return;
+      var key = e.key || '';
+      var tag = (e.target.tagName || '').toLowerCase();
+      var typing = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
+
+      if ((key === '/' && !typing) || ((e.metaKey || e.ctrlKey) && key.toLowerCase() === 'k')) {
+        e.preventDefault();
+        openWindow();
+        focusSearch();
+        return;
+      }
+      if (key === 'Escape') {
+        setMenuOpen(false);
+        hideSearch(true);
+        closeMobileSidebar();
+        if (typing) e.target.blur();
+        return;
+      }
+      if (typing) return;
+
+      if ((e.metaKey || e.ctrlKey) && key.toLowerCase() === 'b') {
+        e.preventDefault();
+        toggleSidebar();
+      }
+      if (e.altKey && key === 'ArrowLeft') {
+        e.preventDefault();
+        if (history.length > 1) history.back();
+      }
+    });
+  }
+
+  function setupScrollUi() {
+    var progress = $('#progress');
+    var topBtn = $('#top-btn');
+    var ticking = false;
+
+    function update() {
+      ticking = false;
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+      if (progress) progress.style.width = (max > 0 ? Math.min(100, (y / max) * 100) : 0) + '%';
+      if (topBtn) topBtn.hidden = y < 320;
+    }
+
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(update);
+    }, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+
+    if (topBtn) topBtn.addEventListener('click', function () { scrollTop(); });
+    $$('#mb-top').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setMenuOpen(false);
+        scrollTop();
+      });
+    });
+  }
+
+  /* --------------------------------------------------------------- 启动 */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

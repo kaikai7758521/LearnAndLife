@@ -1,10 +1,26 @@
 # 📚 我的学习笔记
 
 按 **学习方向 / 内容 / 细节** 组织 Markdown 笔记，自动生成目录的纯静态站点。
+界面做成 macOS 桌面风格：菜单栏、可关闭 / 缩放的红绿灯窗口、程序坞、深浅色主题和全站搜索。
 没有构建步骤、没有依赖安装：把 `.md` 文件放进仓库，推送到 GitHub，Pages 就会自动更新。
 
 > [!TIP]
 > 侧边栏目录来自 `manifest.json`；它既可以在本地用脚本生成，也会由 GitHub Action 在每次推送后自动刷新。
+
+## 个性化站点
+
+站点标题、副标题、品牌图标和页脚文字都在根目录的 `site.json` 里，改完刷新页面即可，不需要重新构建：
+
+```json
+{
+  "title": "我的学习笔记",
+  "subtitle": "知识沉淀 · 持续更新",
+  "brandIcon": "📚",
+  "footer": "持续学习，持续记录"
+}
+```
+
+`assets/js/config.js` 只保留部署相关配置：GitHub 仓库信息、首页文件名、忽略的目录、是否显示「最近修改」。GitHub Pages 站点通常可以留空 `owner` / `repo`（会从 `*.github.io` 域名自动识别），本地预览或自定义域名时手动填写即可。
 
 ## 目录约定
 
@@ -46,13 +62,20 @@
    ---
    title: 闭包
    date: 2026-10-21
+   updated: 2026-10-28
+   icon: 🚀
    tags: [JavaScript, 基础]
+   description: 一句话说明这篇笔记讲什么
    ---
 
    # 闭包
 
    正文……
    ```
+
+   - `date` 是写作日期，`updated` 是最近修改日期（不写则取 Git 最后一次提交时间）。
+   - `icon` 可以用任意 emoji 覆盖自动生成的页面图标。
+   - `tags` 会显示在标题下方，`description` 会显示成摘要。
 
 3. **写完刷新索引**
 
@@ -61,6 +84,26 @@
    ```
 
    > 推送到 GitHub 后，Action 会自动执行同样的脚本，无需手动运行。
+
+## 索引文件 `manifest.json`
+
+`scripts/build-manifest.ps1` 会扫描所有 Markdown 生成索引，每篇笔记包含：
+
+| 字段 | 说明 |
+| --- | --- |
+| `path` | 仓库内的相对路径 |
+| `title` | front matter 的 `title` → 第一个 `#` 标题 → 文件名 |
+| `date` | 写作日期（front matter → 旧索引 → 文件修改时间） |
+| `lastModified` | 最近修改日期（front matter 的 `updated` → Git 提交时间 → 文件修改时间） |
+| `icon` | front matter 的 `icon`，留空则按路径自动分配 emoji |
+| `tags` | front matter 的 `tags` 数组，用于标签搜索 |
+| `size` | 字节数 |
+
+如果本机没有 Git，或不想在生成时调用 Git，可以加 `-NoGit`：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/build-manifest.ps1 -NoGit
+```
 
 ## 本地预览
 
@@ -104,7 +147,7 @@ powershell -ExecutionPolicy Bypass -File scripts/serve.ps1
 
 3. 稍等 1–2 分钟，访问 `https://<你的用户名>.github.io/learning-notes/`。
 
-4. 如果站点不在 `*.github.io` 根路径，`assets/js/config.js` 里的 `owner` / `repo` 一般可以留空（会自动识别）；本地预览或自定义域名时再手动填写。
+4. 如果站点不在 `*.github.io` 根路径，`assets/js/config.js` 里的 `owner` / `repo` 一般可以留空（会自动识别）；本地预览或自定义域名时再手动填写。本项目已按当前仓库填写为 `kaikai7758521/LearnAndLife`。
 
 > [!IMPORTANT]
 > 首页文件固定为 `README.md`（可在 `config.js` 的 `home` 中修改）。它不会出现在左侧目录里。
@@ -114,19 +157,23 @@ powershell -ExecutionPolicy Bypass -File scripts/serve.ps1
 | 路径 | 作用 |
 | --- | --- |
 | `index.html` | 站点入口（无构建步骤，直接引用 CDN） |
-| `assets/js/config.js` | 站点标题、仓库信息、首页文件、忽略目录 |
-| `assets/js/app.js` | 目录树、路由、搜索、渲染增强 |
-| `assets/css/style.css` | 全部样式与深色主题 |
+| `site.json` | 站点标题、副标题、品牌图标、页脚文字 |
+| `assets/js/config.js` | 仓库信息、首页文件、忽略目录、最近修改开关 |
+| `assets/js/app.js` | 目录树、路由、搜索、渲染增强、窗口交互 |
+| `assets/css/style.css` | 全部样式、macOS 桌面外观与深色主题 |
 | `manifest.json` | 自动生成的笔记索引（请一起提交） |
+| `.github/workflows/build-manifest.yml` | 推送后自动运行脚本并提交索引 |
 | `scripts/serve.ps1` | 本地预览服务器 |
 | `scripts/build-manifest.ps1` | 重新生成 `manifest.json` |
 | `scripts/new-note.ps1` | 新建笔记模板 |
 
 ## 快捷操作
 
-- 按 `/` 聚焦搜索框，回车打开第一条结果。
-- `Esc` 清空搜索 / 关闭移动端目录。
-- 右侧「本页目录」跟随滚动高亮，点击可复制式跳转锚点。
+- 按 `/` 或 `Cmd / Ctrl + K` 聚焦搜索框，`↑` / `↓` 选择结果，回车打开。
+- `Cmd / Ctrl + B` 隐藏 / 显示左侧目录；`Esc` 关闭搜索、菜单和移动端目录。
+- `Alt + ←` 返回上一页（浏览器自带的返回快捷键同样可用）。
+- 标题栏红绿灯：🔴 关闭窗口、🟡 最小化到程序坞、🟢 铺满屏幕；双击标题栏也可以缩放。
+- 右侧「本页目录」跟随滚动高亮，点击可跳转锚点。
 - 右上角 🌙 / ☀️ 切换深浅主题，选择会记住。
 
 ---
