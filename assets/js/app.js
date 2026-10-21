@@ -19,7 +19,7 @@
     branch: 'main',
     home: 'README.md',
     excludeDirs: ['assets', 'scripts', 'node_modules', '.github', '_site', '.jekyll-cache'],
-    excludeFiles: ['README.md'],
+    excludeFiles: ['README.md', 'USAGE.md'],
     showLastModified: true,
     liveLastModified: true
   };
@@ -252,7 +252,7 @@
   async function boot() {
     if (location.protocol === 'file:') {
       renderNavError('本地双击打开无法读取文件（浏览器安全限制）。请在项目目录运行 ' +
-        '<code>scripts/serve.ps1</code>，再访问 http://localhost:8080/');
+        '<code>python3 -m http.server 8080</code>，再访问 http://localhost:8080/');
       return;
     }
     try {
@@ -424,7 +424,7 @@
     } catch (e) { /* 继续尝试 GitHub API */ }
 
     if (!state.repo) {
-      throw new Error('没有找到 manifest.json。请运行 scripts/build-manifest.ps1 生成索引后刷新页面。');
+      throw new Error('没有找到 manifest.json，且未能识别 GitHub 仓库信息。请检查 assets/js/config.js 中的 owner / repo 配置。');
     }
     return githubScan();
   }
@@ -435,7 +435,7 @@
     var res = await fetch(api, { headers: { Accept: 'application/vnd.github+json' } });
     if (!res.ok) {
       throw new Error('manifest.json 缺失，且 GitHub API 扫描失败（HTTP ' + res.status + '）。' +
-        '请运行 scripts/build-manifest.ps1 后重新提交。');
+        '请检查网络后刷新重试。');
     }
     var data = await res.json();
     var files = (data.tree || [])
@@ -871,7 +871,7 @@
       '<p>首页文件 <code>' + escapeHtml(CFG.home) + '</code> 暂时没有读取到，但不影响浏览笔记。</p>' +
       '<ol>' +
       '<li>在仓库中按 <code>学习方向/内容/细节.md</code> 新建 Markdown 文件；</li>' +
-      '<li>运行 <code>scripts/build-manifest.ps1</code>（或等待 GitHub Action）更新索引；</li>' +
+      '<li>等待 GitHub Action 自动更新索引（无需本地运行命令）；</li>' +
       '<li>刷新页面即可在左侧目录看到新笔记。</li>' +
       '</ol></div>';
   }
@@ -973,7 +973,7 @@
         article.innerHTML = '<div class="state-box"><h2>读取失败</h2>' +
           '<p>没能读取 <code>' + escapeHtml(path) + '</code>' +
           (err && err.message ? '（' + escapeHtml(err.message) + '）' : '') + '。</p>' +
-          '<p>请确认文件存在，并运行 <code>scripts/build-manifest.ps1</code> 更新索引。</p>' +
+          '<p>请确认文件已在仓库中提交；索引由 GitHub Action 自动更新，稍后刷新页面即可。</p>' +
           '<p><a class="btn primary" href="' + toHash('') + '">返回首页</a></p></div>';
       });
   }
