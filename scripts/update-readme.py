@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-扫描仓库中的 Markdown 笔记，重新生成 README.md 里的笔记大纲。
+扫描仓库中的 Markdown 笔记，重新生成 README.md 里的笔记目录。
 
 用法（在仓库根目录执行）：
     python3 scripts/update-readme.py
@@ -12,9 +12,10 @@ README.md 中被下面两行注释包住的内容会被整体替换：
     <!-- NOTES:START -->
     <!-- NOTES:END -->
 
-大纲中的标题、锚点规则与 assets/js/app.js 保持一致：
+目录中的标题、锚点规则与 assets/js/app.js 保持一致：
     - 标题依次取 front matter 的 title → 第一个 # 标题 → 文件名；
     - 小标题取 H2–H4，锚点使用页面同款 slugify 规则。
+生成结果是一份目录：笔记标题链接到页面，H2–H4 作为嵌套链接指向对应章节。
 """
 
 from __future__ import annotations
@@ -59,6 +60,11 @@ def slugify(text: str) -> str:
     text = PUNCT_RE.sub("", text)
     text = re.sub(r"-+", "-", text)
     return text.strip("-")
+
+
+def link_text(text: str) -> str:
+    """转义会破坏 Markdown 链接语法的方括号。"""
+    return text.replace("[", "\\[").replace("]", "\\]")
 
 
 def display_name(filename: str) -> str:
@@ -241,15 +247,12 @@ def render_block(base_url: str, notes: list[dict[str, object]]) -> str:
         heading = dir_path.replace("/", " / ") if dir_path else "根目录"
         lines.extend([f"## {heading}", ""])
         for note in groups[dir_path]:
-            lines.extend([f"### {note['title']}", "", f"- 页面地址：<{note['url']}>"])
-            outline = note["outline"]
-            if outline:
-                lines.append("- 内容大纲：")
-                for level, text_value, slug in outline:
-                    indent = "  " * (level - 1)
-                    link = anchor_url(base_url, str(note["path"]), slug)
-                    lines.append(f"{indent}- {text_value} — <{link}>")
-            lines.append("")
+            lines.append(f"- [{link_text(str(note['title']))}]({note['url']})")
+            for level, text_value, slug in note["outline"]:
+                indent = "  " * (level - 1)
+                link = anchor_url(base_url, str(note["path"]), slug)
+                lines.append(f"{indent}- [{link_text(text_value)}]({link})")
+        lines.append("")
 
     lines.append(END_MARK)
     return "\n".join(lines).rstrip() + "\n"
@@ -274,7 +277,7 @@ def apply_block(readme: str, block: str) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="根据笔记内容重新生成 README.md 的笔记大纲。")
+    parser = argparse.ArgumentParser(description="根据笔记内容重新生成 README.md 的笔记目录。")
     parser.add_argument("--base-url", default="", help="GitHub Pages 站点地址，例如 https://owner.github.io/repo/")
     parser.add_argument("--check", action="store_true", help="只检查 README.md 是否需要更新，不写入文件")
     args = parser.parse_args()

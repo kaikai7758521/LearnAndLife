@@ -84,7 +84,7 @@
 
 4. **等待自动更新**：提交后不需要做任何事——
 
-   - GitHub Action 检测到 `.md` 变化，自动运行 `scripts/build-manifest.ps1` 和 `scripts/update-readme.py`，刷新并提交 `manifest.json` 与 `README.md` 大纲；
+   - GitHub Action 检测到 `.md` 变化，自动运行 `scripts/build-manifest.ps1` 和 `scripts/update-readme.py`，刷新并提交 `manifest.json` 与 `README.md` 目录；
    - GitHub Pages 随之重新部署；
    - 部署完成后刷新页面，左侧目录、搜索和首页的「学习方向 / 最近更新」会自动出现新目录和新笔记。
 
@@ -105,7 +105,7 @@ GitHub Action 会自动运行 `scripts/build-manifest.ps1` 扫描所有 Markdown
 | `tags` | front matter 的 `tags` 数组，用于标签搜索 |
 | `size` | 字节数 |
 
-## 更新 README 大纲
+## 更新 README 目录
 
 `README.md` 中 `<!-- NOTES:START -->` 与 `<!-- NOTES:END -->` 之间的内容由脚本自动生成。需要手动刷新时，在仓库根目录执行：
 
@@ -114,6 +114,7 @@ python3 scripts/update-readme.py
 ```
 
 - 脚本会扫描所有笔记，读取 front matter 的 `title`、第一个 `#` 标题和 H2–H4 小标题；
+- 输出为纯目录形式：笔记标题本身即链接，小标题作为嵌套链接，行尾不再追加 URL；
 - 自动生成与页面一致的锚点链接，并按「学习方向 / 内容」分组；
 - 只替换两个标记之间的内容，标记之外的介绍和说明保持不变；
 - 重复执行结果一致；加 `--check` 只检查是否需要更新，不写入文件；
@@ -186,7 +187,7 @@ python3 -m http.server 8080
 | `.github/workflows/build-manifest.yml` | 推送 `.md` 后自动生成并提交索引 |
 | `scripts/serve.ps1` | 本地预览服务器（Windows PowerShell 可选；macOS 用 `python3 -m http.server 8080`） |
 | `scripts/build-manifest.ps1` | 生成索引的脚本（由 Action 自动调用，无需手动运行） |
-| `scripts/update-readme.py` | 重新生成 README.md 的笔记大纲（Action 自动调用，也可本地运行） |
+| `scripts/update-readme.py` | 重新生成 README.md 的笔记目录（Action 自动调用，也可本地运行） |
 | `USAGE.md` | 使用说明（本文件） |
 
 ## 快捷操作
