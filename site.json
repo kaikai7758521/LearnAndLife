@@ -1,6 +1,9 @@
 {
   "title": "我的学习笔记",
   "subtitle": "知识沉淀 · 持续更新",
+  "titleEn": "My Learning Notes",
+  "subtitleEn": "Notes that grow with me",
   "brandIcon": "📚",
-  "footer": "持续学习，持续记录"
+  "footer": "持续学习，持续记录",
+  "footerEn": "Keep learning, keep writing"
 }

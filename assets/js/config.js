@@ -16,6 +16,11 @@ window.SITE_CONFIG = {
   brandIcon: '📚',
   footer: '持续学习，持续记录',
 
+  // 英文界面文案（site.json 中的 titleEn / subtitleEn / footerEn 可覆盖）
+  titleEn: 'My Learning Notes',
+  subtitleEn: 'Notes that grow with me',
+  footerEn: 'Keep learning, keep writing',
+
   // GitHub 仓库信息（留空则根据 *.github.io 域名自动识别）
   owner: 'kaikai7758521',   // 例：'octocat'
   repo: 'LearnAndLife',     // 例：'learning-notes'
@@ -24,11 +29,12 @@ window.SITE_CONFIG = {
 
   // 首页展示的 Markdown 文件（仓库根目录下）
   home: 'README.md',
+  homeEn: 'README.en.md',
 
   // 生成目录索引时需要忽略的目录（仓库根目录相对路径）
   excludeDirs: ['assets', 'scripts', 'node_modules', '.github', '_site', '.jekyll-cache'],
   // 生成目录索引时需要忽略的文件（仓库相对路径）
-  excludeFiles: ['README.md', 'USAGE.md'],
+  excludeFiles: ['README.md', 'README.en.md', 'USAGE.md'],
 
   // 每个页面底部显示「最近修改」日期（数据来自 manifest.json / Git 提交）
   showLastModified: true,

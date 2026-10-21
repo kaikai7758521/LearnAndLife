@@ -28,7 +28,7 @@ param(
     [string]$Root = '',
     [string]$Output = 'manifest.json',
     [string[]]$ExcludeDirs = @('assets', 'scripts', 'node_modules', '.github', '_site', '.jekyll-cache'),
-    [string[]]$ExcludeFiles = @('README.md', 'USAGE.md'),
+    [string[]]$ExcludeFiles = @('README.md', 'README.en.md', 'USAGE.md'),
     [switch]$NoGit
 )
 
@@ -127,6 +127,9 @@ $files = New-Object System.Collections.ArrayList
 foreach ($file in (Get-ChildItem -LiteralPath $Root -Recurse -File -Filter *.md)) {
     $rel = $file.FullName.Substring($Root.Length).TrimStart([char[]]@('\', '/'))
     $rel = $rel.Replace('\', '/')
+
+    # 英文译文由 translate-notes.py 单独维护，不进入中文索引
+    if ($file.Name -match '\.en\.md$') { continue }
 
     $skip = $false
     foreach ($segment in $rel.Split('/')) {

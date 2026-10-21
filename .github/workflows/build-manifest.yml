@@ -1,4 +1,4 @@
-name: Build manifest and README outline
+name: Build manifest, translations and README outlines
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
       - '**/*.md'
       - 'scripts/build-manifest.ps1'
       - 'scripts/update-readme.py'
+      - 'scripts/translate-notes.py'
       - '.github/workflows/build-manifest.yml'
   workflow_dispatch:
 
@@ -30,17 +31,27 @@ jobs:
         shell: pwsh
         run: ./scripts/build-manifest.ps1
 
-      - name: Update README outline
+      - name: Translate notes to English
+        env:
+          TRANSLATE_API_KEY: ${{ secrets.TRANSLATE_API_KEY }}
+          TRANSLATE_API_URL: ${{ vars.TRANSLATE_API_URL }}
+          TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL }}
+        run: python3 scripts/translate-notes.py
+
+      - name: Update README outlines
         run: python3 scripts/update-readme.py
 
       - name: Commit and push changes
         run: |
-          if [ -z "$(git status --porcelain manifest.json README.md)" ]; then
-            echo "manifest.json 与 README.md 均是最新，无需提交。"
+          for file in manifest.json manifest.en.json README.md README.en.md; do
+            if [ -f "$file" ]; then git add "$file"; fi
+          done
+          git add -- '*.en.md' 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "索引、译文与 README 目录均是最新，无需提交。"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add manifest.json README.md
-          git commit -m "chore: update manifest.json and README outline"
+          git commit -m "chore: update manifest, English notes and README outlines"
           git push

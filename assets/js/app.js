@@ -14,17 +14,22 @@
     subtitle: '知识沉淀 · 持续更新',
     brandIcon: '📚',
     footer: '持续学习，持续记录',
+    titleEn: 'My Learning Notes',
+    subtitleEn: 'Notes that grow with me',
+    footerEn: 'Keep learning, keep writing',
     owner: '',
     repo: '',
     branch: 'main',
     home: 'README.md',
+    homeEn: 'README.en.md',
     excludeDirs: ['assets', 'scripts', 'node_modules', '.github', '_site', '.jekyll-cache'],
-    excludeFiles: ['README.md', 'USAGE.md'],
+    excludeFiles: ['README.md', 'README.en.md', 'USAGE.md'],
     showLastModified: true,
     liveLastModified: true
   };
 
   var CFG = Object.assign({}, DEFAULTS, window.SITE_CONFIG || {});
+  var I18N = window.SITE_I18N || { zh: {}, en: {}, dirs: {} };
 
   /* ------------------------------------------------------------- 基础工具 */
   function $(sel, root) { return (root || document).querySelector(sel); }
@@ -83,7 +88,32 @@
     return idx >= 0 ? path.slice(0, idx) : '';
   }
 
-  function stripExt(name) { return name.replace(/\.md$/i, ''); }
+  function stripExt(name) { return name.replace(/\.en\.md$|\.md$/i, ''); }
+
+  function t(key, vars) {
+    var table = I18N[state.lang] || I18N.zh || {};
+    var value = table[key];
+    if (value == null) value = (I18N.zh || {})[key];
+    if (value == null) return key;
+    if (vars) {
+      Object.keys(vars).forEach(function (name) {
+        value = String(value).replace(new RegExp('\\{' + name + '\\}', 'g'), vars[name]);
+      });
+    }
+    return String(value);
+  }
+
+  function dirLabel(name) {
+    var label = displayName(name);
+    if (state.lang === 'en') return I18N.dirs[label] || I18N.dirs[name] || label;
+    return label;
+  }
+
+  function pathLabel(path) {
+    var parts = String(path || '').split('/').filter(Boolean);
+    if (!parts.length) return t('root');
+    return parts.map(dirLabel).join(' / ');
+  }
 
   // 去掉 "01-" 之类的排序前缀，仅用于展示
   function displayName(name) {
@@ -123,9 +153,9 @@
     var diff = Date.now() - d.getTime();
     if (diff < 0) return '';
     var day = 86400000;
-    if (diff < 3600000) return '刚刚';
-    if (diff < day) return Math.floor(diff / 3600000) + ' 小时前';
-    if (diff < day * 30) return Math.floor(diff / day) + ' 天前';
+    if (diff < 3600000) return t('justNow');
+    if (diff < day) return Math.floor(diff / 3600000) + t('hoursAgo');
+    if (diff < day * 30) return Math.floor(diff / day) + t('daysAgo');
     return '';
   }
 
@@ -187,6 +217,7 @@
     repo: null,
     files: [],
     fileMap: new Map(),
+    enMap: new Map(),
     tree: null,
     flat: [],
     navMap: new Map(),
@@ -198,6 +229,7 @@
     currentFm: null,
     commitCache: new Map(),
     manifestSource: '',
+    lang: 'zh',
     corpus: null,
     corpusPromise: null,
     corpusDone: false,
@@ -207,7 +239,10 @@
       title: DEFAULTS.title,
       subtitle: DEFAULTS.subtitle,
       brandIcon: DEFAULTS.brandIcon,
-      footer: DEFAULTS.footer
+      footer: DEFAULTS.footer,
+      titleEn: DEFAULTS.titleEn,
+      subtitleEn: DEFAULTS.subtitleEn,
+      footerEn: DEFAULTS.footerEn
     }
   };
 
@@ -221,12 +256,16 @@
 
   /* --------------------------------------------------------------- 启动 */
   function init() {
+    state.lang = store('ln-lang') === 'en' ? 'en' : 'zh';
+    document.documentElement.lang = state.lang === 'en' ? 'en' : 'zh-CN';
+
     var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     applyTheme(store('ln-theme') || (prefersDark ? 'dark' : 'light'), true);
 
     state.repo = detectRepo();
     restoreUiState();
     paintSite();
+    applyStaticLang();
     bindUi();
     startClock();
     setupRepoLinks();
@@ -261,6 +300,7 @@
       state.manifestSource = manifest.source;
       state.fileMap = new Map();
       state.files.forEach(function (f) { state.fileMap.set(f.path, f); });
+      await loadEnglishManifest();
       buildIndex();
       defaultExpand();
       renderNav();
@@ -282,7 +322,7 @@
       if (!res.ok) return;
       var data = await res.json();
       if (!data || typeof data !== 'object' || Array.isArray(data)) return;
-      ['title', 'subtitle', 'brandIcon', 'footer'].forEach(function (key) {
+      ['title', 'subtitle', 'brandIcon', 'footer', 'titleEn', 'subtitleEn', 'footerEn'].forEach(function (key) {
         var value = sanitizeSiteValue(data[key]);
         if (value) state.site[key] = value;
       });
@@ -291,10 +331,11 @@
   }
 
   function paintSite() {
-    var title = state.site.title || DEFAULTS.title;
-    var subtitle = state.site.subtitle || DEFAULTS.subtitle;
+    var en = state.lang === 'en';
+    var title = (en ? (state.site.titleEn || DEFAULTS.titleEn) : state.site.title) || DEFAULTS.title;
+    var subtitle = (en ? (state.site.subtitleEn || DEFAULTS.subtitleEn) : state.site.subtitle) || DEFAULTS.subtitle;
     var icon = state.site.brandIcon || DEFAULTS.brandIcon;
-    var footer = state.site.footer || DEFAULTS.footer;
+    var footer = (en ? (state.site.footerEn || DEFAULTS.footerEn) : state.site.footer) || DEFAULTS.footer;
 
     $$('#site-title').forEach(function (el) { el.textContent = title; });
     $$('#site-subtitle').forEach(function (el) { el.textContent = subtitle; });
@@ -307,6 +348,92 @@
     setFavicon(icon);
   }
 
+  /* --------------------------------------------------------- 中英文切换 */
+  function applyStaticLang() {
+    document.documentElement.lang = state.lang === 'en' ? 'en' : 'zh-CN';
+
+    $$('[data-i18n]').forEach(function (el) {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    $$('[data-i18n-placeholder]').forEach(function (el) {
+      el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+    });
+    $$('[data-i18n-title]').forEach(function (el) {
+      var label = t(el.getAttribute('data-i18n-title'));
+      el.title = label;
+      el.setAttribute('aria-label', label);
+    });
+
+    paintLangUi();
+    applyTheme(document.documentElement.getAttribute('data-theme'), true);
+    syncExpandLabel();
+    updateNavCount();
+    if (!state.current) refreshDocTitle();
+  }
+
+  function paintLangUi() {
+    var label = t('langButton');
+    var title = t('switchLanguage');
+
+    $$('#lang-btn, #lang-btn-top').forEach(function (btn) {
+      btn.textContent = label;
+      btn.title = title;
+      btn.setAttribute('aria-label', title);
+    });
+    $$('#mb-lang').forEach(function (btn) {
+      var text = btn.querySelector('span');
+      if (text) text.textContent = t('menuLang');
+    });
+  }
+
+  function setLanguage(lang, opts) {
+    opts = opts || {};
+    var next = lang === 'en' ? 'en' : 'zh';
+    var changed = state.lang !== next;
+    state.lang = next;
+    store('ln-lang', next);
+
+    state.corpus = null;
+    state.corpusPromise = null;
+    state.corpusDone = false;
+
+    document.documentElement.lang = next === 'en' ? 'en' : 'zh-CN';
+    paintSite();
+    applyStaticLang();
+
+    if (state.files.length) {
+      renderNav();
+      updateNavCount();
+    }
+    if (opts.render === false) return;
+
+    if (state.current) {
+      loadNote(state.current, '', { keepScroll: true });
+    } else {
+      renderHome('', { keepScroll: true });
+    }
+    var input = $('#search');
+    if (input && !$('#search-results').hidden) renderSearchResults(input.value);
+    if (changed) toast(next === 'en' ? 'English' : '中文');
+  }
+
+  function toggleLanguage() {
+    setLanguage(state.lang === 'en' ? 'zh' : 'en');
+  }
+
+  function scrollRatio() {
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    return max > 0 ? (window.pageYOffset || document.documentElement.scrollTop || 0) / max : 0;
+  }
+
+  function restoreScrollRatio(ratio) {
+    if (ratio == null) return;
+    window.requestAnimationFrame(function () {
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      window.scrollTo({ top: Math.max(0, ratio * max), behavior: 'auto' });
+    });
+  }
+
   function setFavicon(icon) {
     var link = document.querySelector('link[rel="icon"]');
     if (!link) return;
@@ -316,14 +443,21 @@
   }
 
   function refreshDocTitle() {
-    document.title = state.currentTitle
-      ? state.currentTitle + ' · ' + (state.site.title || DEFAULTS.title)
+    var siteTitle = state.lang === 'en'
+      ? (state.site.titleEn || DEFAULTS.titleEn)
       : (state.site.title || DEFAULTS.title);
+    document.title = state.currentTitle
+      ? state.currentTitle + ' · ' + siteTitle
+      : siteTitle;
   }
 
   /* ----------------------------------------------------------- 菜单栏时钟 */
   function clockText() {
     var d = new Date();
+    if (state.lang === 'en') {
+      return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) +
+        ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    }
     var days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     return days[d.getDay()] + ' ' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' +
       pad2(d.getHours()) + ':' + pad2(d.getMinutes());
@@ -386,6 +520,7 @@
       if (segments[i].charAt(0) === '.') return true;
     }
     if ((CFG.excludeFiles || []).indexOf(path) !== -1) return true;
+    if (/\.en\.md$/i.test(path)) return true;
     var dirs = CFG.excludeDirs || [];
     for (var j = 0; j < dirs.length; j++) {
       if (path === dirs[j] || path.indexOf(dirs[j] + '/') === 0) return true;
@@ -404,10 +539,12 @@
     return {
       path: path,
       title: raw.title ? String(raw.title).trim() : '',
+      titleEn: raw.titleEn ? String(raw.titleEn).trim() : '',
       date: raw.date ? String(raw.date).trim() : '',
       lastModified: String(raw.lastModified || raw.modified || raw.mtime || '').trim(),
       size: Number(raw.size) || 0,
       tags: Array.isArray(tags) ? tags : [],
+      tagsEn: Array.isArray(raw.tagsEn) ? raw.tagsEn : [],
       icon: raw.icon ? String(raw.icon).trim() : ''
     };
   }
@@ -443,6 +580,60 @@
       .map(function (item) { return normalizeFile(item); })
       .filter(function (f) { return f && !isExcluded(f.path); });
     return { files: files, source: 'github' };
+  }
+
+  async function loadEnglishManifest() {
+    state.enMap = new Map();
+    try {
+      var res = await fetch('./manifest.en.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) return;
+      var data = await res.json();
+      var list = Array.isArray(data.files) ? data.files : [];
+      list.forEach(function (item) {
+        if (!item || !item.path) return;
+        state.enMap.set(normalizePath(String(item.path)), item);
+      });
+      state.files.forEach(function (file) {
+        var meta = state.enMap.get(file.path);
+        if (!meta) return;
+        if (meta.title) file.titleEn = String(meta.title).trim();
+        if (Array.isArray(meta.tags)) file.tagsEn = meta.tags;
+        if (meta.description) file.descriptionEn = String(meta.description).trim();
+        file.hasEn = true;
+      });
+    } catch (e) { /* 没有英文清单时保持中文模式 */ }
+  }
+
+  function englishPathFor(path) {
+    return /\.en\.md$/i.test(path) ? path : String(path).replace(/\.md$/i, '.en.md');
+  }
+
+  function noteFetchPath(path) {
+    return state.lang === 'en' ? englishPathFor(path) : path;
+  }
+
+  function splitLangPath(path) {
+    if (/\.en\.md$/i.test(path)) {
+      return { path: path.replace(/\.en\.md$/i, '.md'), lang: 'en' };
+    }
+    return { path: path, lang: '' };
+  }
+
+  async function fetchNoteText(path) {
+    var target = noteFetchPath(path);
+    var res = await fetch('./' + encodePath(target), { cache: 'no-store' });
+    if (res.ok) {
+      return { text: await res.text(), path: target, english: target !== path };
+    }
+    if (target !== path) {
+      var fallback = await fetch('./' + encodePath(path), { cache: 'no-store' });
+      if (fallback.ok) {
+        if (state.lang === 'en') toast(t('missingTranslation'), 2600);
+        return { text: await fallback.text(), path: path, english: false };
+      }
+      throw new Error('HTTP ' + fallback.status);
+    }
+    throw new Error('HTTP ' + res.status);
   }
 
   function splitFrontMatter(text) {
@@ -523,7 +714,13 @@
   }
 
   function fileTitle(file) {
+    if (state.lang === 'en' && file.titleEn) return file.titleEn;
     return file.title || displayName(baseName(file.path));
+  }
+
+  function fileTags(file) {
+    if (state.lang === 'en' && file.tagsEn && file.tagsEn.length) return file.tagsEn;
+    return file.tags || [];
   }
 
   /* ------------------------------------------------------------- 侧边目录 */
@@ -534,7 +731,7 @@
     state.navMap = new Map();
 
     if (!state.tree || !state.files.length) {
-      nav.innerHTML = '<div class="nav-empty">还没有可展示的笔记。<br>按 <code>学习方向/内容/细节.md</code> 新建文件后运行索引脚本。</div>';
+      nav.innerHTML = '<div class="nav-empty">' + escapeHtml(t('navEmpty')) + '</div>';
       syncExpandLabel();
       return;
     }
@@ -557,7 +754,7 @@
         '<button type="button" class="nav-group-btn" aria-expanded="' + (open ? 'true' : 'false') + '">' +
         '<span class="nav-caret" aria-hidden="true">▸</span>' +
         '<span class="nav-folder" aria-hidden="true">' + folderIcon(dir.path) + '</span>' +
-        '<span class="nav-group-label">' + escapeHtml(displayName(dir.name)) + '</span>' +
+        '<span class="nav-group-label">' + escapeHtml(dirLabel(dir.name)) + '</span>' +
         '<span class="nav-count-badge">' + countFiles(dir) + '</span>' +
         '</button>' +
         '<ul class="nav-children">' + nodeMarkup(dir) + '</ul>' +
@@ -633,8 +830,8 @@
     var btn = $('#expand-btn');
     if (!btn) return;
     var expand = !allExpanded();
-    btn.textContent = expand ? '展开全部' : '收起全部';
-    btn.setAttribute('aria-label', expand ? '展开全部目录' : '收起全部目录');
+    btn.textContent = expand ? t('expandAll') : t('collapseAll');
+    btn.setAttribute('aria-label', expand ? t('expandAll') : t('collapseAll'));
   }
 
   function expandAncestors(path) {
@@ -676,8 +873,8 @@
   function updateNavCount() {
     var el = $('#nav-count');
     if (!el) return;
-    el.textContent = state.files.length ? state.files.length + ' 篇' : '—';
-    el.title = state.manifestSource === 'github' ? '目录来自 GitHub API 扫描' : '目录来自 manifest.json';
+    el.textContent = state.files.length ? state.files.length + ' ' + t('notesUnit') : '—';
+    el.title = state.manifestSource === 'github' ? t('navSourceGithub') : t('navSourceManifest');
   }
 
   function renderNavError(message) {
@@ -709,6 +906,11 @@
 
   function handleRoute() {
     var route = parseHash();
+    var resolved = splitLangPath(route.path);
+    if (resolved.lang && resolved.lang !== state.lang) {
+      setLanguage(resolved.lang, { render: false });
+    }
+    route.path = resolved.path;
     state.anchor = route.anchor;
 
     if (!route.path) {
@@ -766,48 +968,51 @@
   }
 
   function homeHtml() {
+    var en = state.lang === 'en';
     var icon = state.site.brandIcon || DEFAULTS.brandIcon;
     var dirs = state.tree ? state.tree.sortedDirs : [];
     var recent = latestFiles(6);
     var latest = recent.length ? formatDate(recent[0].lastModified || recent[0].date) : '—';
+    var siteTitle = (en ? (state.site.titleEn || DEFAULTS.titleEn) : state.site.title) || DEFAULTS.title;
+    var siteSubtitle = (en ? (state.site.subtitleEn || DEFAULTS.subtitleEn) : state.site.subtitle) || DEFAULTS.subtitle;
 
     var html = '<section class="home-hero">' +
       '<span class="home-hero-badge" data-brand-icon aria-hidden="true">' + icon + '</span>' +
-      '<h1>' + escapeHtml(state.site.title) + '</h1>' +
-      '<p class="home-sub">' + escapeHtml(state.site.subtitle) + '</p>' +
+      '<h1>' + escapeHtml(siteTitle) + '</h1>' +
+      '<p class="home-sub">' + escapeHtml(siteSubtitle) + '</p>' +
       '<div class="home-stats">' +
-      '<span class="home-stat"><b>' + state.files.length + '</b> 篇笔记</span>' +
-      '<span class="home-stat"><b>' + dirs.length + '</b> 个方向</span>' +
-      '<span class="home-stat"><b>' + countDirs() + '</b> 个分类</span>' +
-      '<span class="home-stat">最近更新 <b>' + escapeHtml(latest) + '</b></span>' +
+      '<span class="home-stat"><b>' + state.files.length + '</b> ' + escapeHtml(t('notesCount')) + '</span>' +
+      '<span class="home-stat"><b>' + dirs.length + '</b> ' + escapeHtml(t('directionCount')) + '</span>' +
+      '<span class="home-stat"><b>' + countDirs() + '</b> ' + escapeHtml(t('categoryCount')) + '</span>' +
+      '<span class="home-stat">' + escapeHtml(t('recentUpdates')) + ' <b>' + escapeHtml(latest) + '</b></span>' +
       '</div></section>';
 
     if (dirs.length) {
-      html += '<section class="home-block"><div class="home-section-head"><h2>学习方向</h2>' +
-        '<span>' + dirs.length + ' 个方向</span></div><div class="folder-grid">';
+      html += '<section class="home-block"><div class="home-section-head"><h2>' + escapeHtml(t('learningAreas')) + '</h2>' +
+        '<span>' + dirs.length + ' ' + escapeHtml(t('directionCount')) + '</span></div><div class="folder-grid">';
       dirs.forEach(function (dir) {
         var first = firstFile(dir);
         var topics = dir.sortedDirs.length;
         html += '<a class="folder-card" href="' + (first ? toHash(first.path) : '#/') + '">' +
           '<span class="page-badge" aria-hidden="true">' + folderIcon(dir.path) + '</span>' +
           '<span class="folder-card-body">' +
-          '<span class="folder-card-title">' + escapeHtml(displayName(dir.name)) + '</span>' +
-          '<span class="folder-card-desc">' + countFiles(dir) + ' 篇笔记' +
-          (topics ? ' · ' + topics + ' 个分类' : '') +
-          (first ? ' · 从「' + escapeHtml(fileTitle(first)) + '」开始' : '') +
+          '<span class="folder-card-title">' + escapeHtml(dirLabel(dir.name)) + '</span>' +
+          '<span class="folder-card-desc">' + countFiles(dir) + ' ' + escapeHtml(t('notesCount')) +
+          (topics ? ' · ' + topics + ' ' + escapeHtml(t('categoryCount')) : '') +
+          (first ? ' · ' + escapeHtml(t('startWith')) + escapeHtml(fileTitle(first)) + escapeHtml(t('startWithEnd')) : '') +
           '</span></span></a>';
       });
       html += '</div></section>';
     }
 
     if (recent.length) {
-      html += '<section class="home-block"><div class="home-section-head"><h2>最近更新</h2>' +
-        '<span>按最近修改排序</span></div><ul class="recent-list">';
+      html += '<section class="home-block"><div class="home-section-head"><h2>' + escapeHtml(t('recentUpdates')) + '</h2>' +
+        '<span>' + escapeHtml(t('recentSort')) + '</span></div><ul class="recent-list">';
       recent.forEach(function (file) {
         html += '<li><a class="recent-item" href="' + toHash(file.path) + '">' +
           '<span class="page-badge" aria-hidden="true">' + iconFor(file.path) + '</span>' +
           '<span class="recent-main"><span class="recent-title">' + escapeHtml(fileTitle(file)) + '</span>' +
-          '<span class="recent-path">' + escapeHtml(dirName(file.path) || '根目录') + '</span></span>' +
+          '<span class="recent-path">' + escapeHtml(pathLabel(dirName(file.path))) + '</span></span>' +
           '<span class="recent-date">' + escapeHtml(formatDate(file.lastModified || file.date)) + '</span>' +
           '</a></li>';
       });
@@ -815,14 +1020,16 @@
     }
 
     html += '<section class="home-block home-readme"><div class="home-section-head">' +
-      '<h2>站点说明</h2><span>' + escapeHtml(CFG.home) + '</span></div>' +
+      '<h2>' + escapeHtml(t('siteNotes')) + '</h2><span>' + escapeHtml(en ? (CFG.homeEn || DEFAULTS.homeEn) : CFG.home) + '</span></div>' +
       '<div id="home-doc" class="home-doc markdown-body">' +
-      '<div class="state-box">正在读取首页说明…</div></div></section>';
+      '<div class="state-box">' + escapeHtml(t('loadingHome')) + '</div></div></section>';
 
     return html;
   }
 
-  async function renderHome(anchor) {
+  async function renderHome(anchor, opts) {
+    opts = opts || {};
+    var ratio = opts.keepScroll ? scrollRatio() : null;
     var article = $('#article');
     if (!article) return;
     var seq = ++state.routeSeq;
@@ -848,15 +1055,29 @@
     if (!doc) return;
 
     try {
-      var res = await fetch('./' + encodePath(CFG.home), { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      var text = await res.text();
+      var candidates = state.lang === 'en' ? [CFG.homeEn || DEFAULTS.homeEn, CFG.home] : [CFG.home];
+      var text = '';
+      var usedPath = candidates[0];
+      for (var i = 0; i < candidates.length; i++) {
+        var res = await fetch('./' + encodePath(candidates[i]), { cache: 'no-store' });
+        if (res.ok) {
+          text = await res.text();
+          usedPath = candidates[i];
+          break;
+        }
+      }
+      if (!text) throw new Error('HTTP 404');
       if (seq !== state.routeSeq) return;
+      if (state.lang === 'en' && usedPath !== candidates[0]) toast(t('missingHome'), 2600);
       var parsed = splitFrontMatter(text);
-      var body = stripLeadingH1(parsed.body, state.site.title);
+      var homeTitle = state.lang === 'en'
+        ? (state.site.titleEn || DEFAULTS.titleEn)
+        : (state.site.title || DEFAULTS.title);
+      var body = stripLeadingH1(parsed.body, homeTitle);
       doc.innerHTML = '';
-      renderMarkdown(doc, body, CFG.home, { isHome: true, skipMeta: true });
+      renderMarkdown(doc, body, usedPath, { isHome: true, skipMeta: true });
       buildToc(doc);
+      restoreScrollRatio(ratio);
     } catch (e) {
       if (seq !== state.routeSeq) return;
       doc.innerHTML = builtinHome();
@@ -867,6 +1088,15 @@
   }
 
   function builtinHome() {
+    if (state.lang === 'en') {
+      return '<div class="state-box"><h2>Welcome to your study notes</h2>' +
+        '<p>The home file <code>' + escapeHtml(CFG.homeEn || DEFAULTS.homeEn) + '</code> could not be loaded, but the notes are still available.</p>' +
+        '<ol>' +
+        '<li>Create Markdown files under <code>area/topic/detail.md</code>;</li>' +
+        '<li>Wait for GitHub Actions to refresh the index;</li>' +
+        '<li>Reload the page and the new note appears in the sidebar.</li>' +
+        '</ol></div>';
+    }
     return '<div class="state-box"><h2>欢迎使用你的学习笔记站</h2>' +
       '<p>首页文件 <code>' + escapeHtml(CFG.home) + '</code> 暂时没有读取到，但不影响浏览笔记。</p>' +
       '<ol>' +
@@ -885,8 +1115,8 @@
     state.currentTitle = title || '';
     state.currentIcon = icon || (title ? iconFor(path) : (state.site.brandIcon || DEFAULTS.brandIcon));
 
-    if (winTitle) winTitle.textContent = title || state.site.title;
-    if (winPath) winPath.textContent = title ? (dirName(path) || '根目录') : '首页';
+    if (winTitle) winTitle.textContent = title || ((state.lang === 'en' ? state.site.titleEn : state.site.title) || DEFAULTS.title);
+    if (winPath) winPath.textContent = title ? pathLabel(dirName(path)) : t('home');
     if (winIcon) {
       winIcon.hidden = false;
       setBadge(winIcon, state.currentIcon);
@@ -898,7 +1128,7 @@
     var el = $('#breadcrumb');
     if (!el) return;
 
-    var html = '<a href="' + toHash('') + '">🏠 首页</a>';
+    var html = '<a href="' + toHash('') + '">🏠 ' + escapeHtml(t('home')) + '</a>';
 
     if (path) {
       var parts = path.split('/');
@@ -907,12 +1137,12 @@
       dirs.forEach(function (name) {
         acc.push(name);
         html += '<span class="sep">›</span><span title="' + escapeHtml(acc.join('/')) + '">' +
-          escapeHtml(displayName(name)) + '</span>';
+          escapeHtml(dirLabel(name)) + '</span>';
       });
       html += '<span class="sep">›</span><span class="current">' +
         escapeHtml(fileTitle(state.fileMap.get(path) || { path: path })) + '</span>';
     } else {
-      html = '<span class="current">🏠 首页</span>';
+      html = '<span class="current">🏠 ' + escapeHtml(t('home')) + '</span>';
     }
 
     el.innerHTML = html;
@@ -934,7 +1164,9 @@
     }
   }
 
-  function loadNote(path, anchor) {
+  function loadNote(path, anchor, opts) {
+    opts = opts || {};
+    var ratio = opts.keepScroll ? scrollRatio() : null;
     var file = state.fileMap.get(path);
     var article = $('#article');
     if (!file || !article) { renderNotFound(path); return; }
@@ -956,25 +1188,22 @@
     renderToc([]);
     setEditLink(path);
     renderFootUpdated(path, null);
-    scrollTop(false);
+    if (!opts.keepScroll) scrollTop(false);
 
-    fetch('./' + encodePath(path), { cache: 'no-store' })
-      .then(function (res) {
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res.text();
-      })
-      .then(function (text) {
+    fetchNoteText(path)
+      .then(function (result) {
         if (seq !== state.routeSeq) return;
-        renderNote(text, path);
-        requestAnchorScroll(anchor);
+        renderNote(result.text, path, result.english);
+        if (opts.keepScroll) restoreScrollRatio(ratio);
+        else requestAnchorScroll(anchor);
       })
       .catch(function (err) {
         if (seq !== state.routeSeq) return;
-        article.innerHTML = '<div class="state-box"><h2>读取失败</h2>' +
-          '<p>没能读取 <code>' + escapeHtml(path) + '</code>' +
-          (err && err.message ? '（' + escapeHtml(err.message) + '）' : '') + '。</p>' +
-          '<p>请确认文件已在仓库中提交；索引由 GitHub Action 自动更新，稍后刷新页面即可。</p>' +
-          '<p><a class="btn primary" href="' + toHash('') + '">返回首页</a></p></div>';
+        article.innerHTML = '<div class="state-box"><h2>' + escapeHtml(t('readFailed')) + '</h2>' +
+          '<p>' + escapeHtml(path) +
+          (err && err.message ? '（' + escapeHtml(err.message) + '）' : '') + '</p>' +
+          '<p>' + escapeHtml(t('readFailedHint')) + '</p>' +
+          '<p><a class="btn primary" href="' + toHash('') + '">' + escapeHtml(t('backHome')) + '</a></p></div>';
       });
   }
 
@@ -1002,17 +1231,20 @@
     return Math.max(1, Math.round(cjk / 350 + words / 220));
   }
 
-  function renderNote(text, path) {
+  function renderNote(text, path, english) {
     var file = state.fileMap.get(path) || { path: path };
     var parsed = splitFrontMatter(text);
     var fm = parsed.data || {};
 
     if (fm.icon) file.icon = String(fm.icon).trim();
-    if (fm.title) file.title = String(fm.title).trim();
+    if (fm.title) {
+      if (english) file.titleEn = String(fm.title).trim();
+      else file.title = String(fm.title).trim();
+    }
     if (fm.date) file.date = String(fm.date).trim();
     if (fm.updated) file.lastModified = String(fm.updated).trim();
 
-    var title = file.title || displayName(baseName(path));
+    var title = fileTitle(file);
     var icon = iconFor(path, fm.icon);
     var body = stripLeadingH1(parsed.body, title);
 
@@ -1053,9 +1285,9 @@
     var tags = Array.isArray(fm.tags) ? fm.tags : [];
     var desc = fm.description || fm.summary || fm.desc || '';
 
-    var chips = '<span class="meta-chip">📂 ' + escapeHtml(dirName(path) || '根目录') + '</span>';
+    var chips = '<span class="meta-chip">📂 ' + escapeHtml(pathLabel(dirName(path))) + '</span>';
     if (date) chips += '<span class="meta-chip">📅 ' + escapeHtml(date) + '</span>';
-    chips += '<span class="meta-chip">⏱ ' + readingTime(body) + ' 分钟</span>';
+    chips += '<span class="meta-chip">⏱ ' + readingTime(body) + ' ' + escapeHtml(t('minRead')) + '</span>';
     tags.slice(0, 6).forEach(function (tag) {
       chips += '<span class="meta-chip">#' + escapeHtml(tag) + '</span>';
     });
@@ -1089,14 +1321,14 @@
         '<span class="pg-title">' + escapeHtml(fileTitle(file)) + '</span></a>';
     }
 
-    el.innerHTML = item(prev, 'pg-prev', '← 上一篇') + item(next, 'pg-next', '下一篇 →');
+    el.innerHTML = item(prev, 'pg-prev', t('prev')) + item(next, 'pg-next', t('next'));
   }
 
   function renderToc(items) {
     var el = $('#toc');
     if (!el) return;
     if (!items || !items.length) {
-      el.innerHTML = '<div class="toc-empty">本页暂无小标题</div>';
+      el.innerHTML = '<div class="toc-empty">' + escapeHtml(t('tocEmpty')) + '</div>';
       return;
     }
     el.innerHTML = items.map(function (item) {
@@ -1108,11 +1340,11 @@
   function renderNotFound(path) {
     state.routeSeq += 1;
     state.current = path;
-    state.currentTitle = '页面不存在';
+    state.currentTitle = t('notFoundTitle');
     refreshDocTitle();
     updateActive(path);
     setBreadcrumb(path || '');
-    updateWindowTitle('未找到该笔记', path || '', '🧭');
+    updateWindowTitle(t('notFoundTitle'), path || '', '🧭');
     renderPager('');
     renderToc([]);
     setEditLink('');
@@ -1123,10 +1355,10 @@
     var article = $('#article');
     if (article) {
       article.classList.remove('home-view');
-      article.innerHTML = '<div class="state-box"><h2>找不到这篇笔记</h2>' +
-        '<p><code>' + escapeHtml(path || '') + '</code> 不在当前索引里，可能已被移动或重命名。</p>' +
-        '<p>可以回到首页，或在左侧目录重新选择。</p>' +
-        '<p><a class="btn primary" href="' + toHash('') + '">返回首页</a></p></div>';
+      article.innerHTML = '<div class="state-box"><h2>' + escapeHtml(t('notFoundTitle')) + '</h2>' +
+        '<p><code>' + escapeHtml(path || '') + '</code> ' + escapeHtml(t('notFoundBody')) + '</p>' +
+        '<p>' + escapeHtml(t('notFoundHint')) + '</p>' +
+        '<p><a class="btn primary" href="' + toHash('') + '">' + escapeHtml(t('backHome')) + '</a></p></div>';
     }
   }
 
@@ -1168,7 +1400,7 @@
     }
 
     el.hidden = false;
-    el.innerHTML = (path ? '最近更新：' : '全站最近更新：') +
+    el.innerHTML = (path ? t('footerRecent') : t('footerSiteRecent')) +
       '<span class="fu-date">' + escapeHtml(date) + '</span>' +
       '<span class="fu-live" id="fu-live"></span>';
 
@@ -1204,7 +1436,7 @@
     var live = $('#fu-live');
     if (!live) return;
     var rel = relTime(iso);
-    live.textContent = ' · Git 提交 ' + formatDate(iso) + (rel ? '（' + rel + '）' : '');
+    live.textContent = t('gitCommit') + formatDate(iso) + (rel ? ' (' + rel + ')' : '');
   }
 
   /* ------------------------------------------------------------- 渲染 Markdown */
@@ -1261,8 +1493,8 @@
       var a = document.createElement('a');
       a.className = 'anchor';
       a.href = toHash(linkPath, id);
-      a.setAttribute('aria-label', '本节链接');
-      a.title = '本节链接';
+      a.setAttribute('aria-label', t('sectionLink'));
+      a.title = t('sectionLink');
       a.textContent = '#';
       h.appendChild(a);
     });
@@ -1317,7 +1549,8 @@
   /* ------------------------------------------------------------- 内容装饰 */
   function decorateAlerts(article) {
     var icons = { NOTE: 'ℹ️', TIP: '💡', IMPORTANT: '📌', WARNING: '⚠️', CAUTION: '🚫' };
-    var labels = { NOTE: '提示', TIP: '技巧', IMPORTANT: '重要', WARNING: '注意', CAUTION: '警告' };
+    var labels = { NOTE: t('alertNote'), TIP: t('alertTip'), IMPORTANT: t('alertImportant'),
+      WARNING: t('alertWarning'), CAUTION: t('alertCaution') };
 
     $$('blockquote', article).forEach(function (bq) {
       var first = bq.querySelector('p');
@@ -1372,7 +1605,10 @@
       var anchor = idx >= 0 ? safeDecode(raw.slice(idx + 1)) : '';
       var target = normalizePath(dirPrefix + decodeURISafe(filePart));
 
-      if (/\.md$/i.test(target)) {
+      if (/\.en\.md$/i.test(target)) {
+        a.setAttribute('href', toHash(target, anchor));
+        a.classList.add('internal-link');
+      } else if (/\.md$/i.test(target)) {
         a.setAttribute('href', toHash(target, anchor));
         a.classList.add('internal-link');
       } else {
@@ -1435,13 +1671,13 @@
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'copy-btn';
-      btn.textContent = '复制';
+      btn.textContent = t('copy');
       btn.addEventListener('click', function () {
         copyText(code.textContent).then(function (ok) {
-          btn.textContent = ok ? '已复制' : '复制失败';
+          btn.textContent = ok ? t('copied') : t('copyFailed');
           if (ok) btn.classList.add('copied');
           setTimeout(function () {
-            btn.textContent = '复制';
+            btn.textContent = t('copy');
             btn.classList.remove('copied');
           }, 1500);
         });
@@ -1544,11 +1780,11 @@
     $$('#theme-btn, #mb-theme, #dock-theme').forEach(function (btn) {
       if (btn.id === 'mb-theme') {
         var label = btn.querySelector('span');
-        if (label) label.textContent = dark ? '切换浅色模式' : '切换深色模式';
+        if (label) label.textContent = dark ? t('themeLight') : t('themeDark');
         btn.firstChild.nodeValue = dark ? '☀️ ' : '🌙 ';
       } else {
         btn.textContent = dark ? '☀️' : '🌙';
-        btn.title = dark ? '切换到浅色模式' : '切换到深色模式';
+        btn.title = dark ? t('themeLight') : t('themeDark');
       }
     });
 
@@ -1577,7 +1813,7 @@
     var btn = $('#sidebar-btn');
     if (btn) {
       btn.setAttribute('aria-pressed', hidden ? 'false' : 'true');
-      btn.setAttribute('aria-label', hidden ? '显示目录' : '隐藏目录');
+      btn.setAttribute('aria-label', hidden ? t('showSidebar') : t('hideSidebar'));
     }
   }
 
@@ -1627,7 +1863,7 @@
   function toggleZoom() {
     document.body.classList.toggle('zoomed');
     var zoomed = document.body.classList.contains('zoomed');
-    toast(zoomed ? '窗口已铺满屏幕' : '窗口已还原');
+    toast(zoomed ? t('windowZoomed') : t('windowRestored'));
     window.requestAnimationFrame(function () {
       if (state.anchor) scrollToAnchor(state.anchor, false);
     });
@@ -1674,8 +1910,16 @@
         while (active < 4 && queue.length) {
           (function (file) {
             active += 1;
-            fetch('./' + encodePath(file.path), { cache: 'force-cache' })
-              .then(function (res) { return res.ok ? res.text() : ''; })
+            var target = noteFetchPath(file.path);
+            fetch('./' + encodePath(target), { cache: 'force-cache' })
+              .then(function (res) {
+                if (res.ok) return res.text();
+                if (target !== file.path) {
+                  return fetch('./' + encodePath(file.path), { cache: 'force-cache' })
+                    .then(function (fallback) { return fallback.ok ? fallback.text() : ''; });
+                }
+                return '';
+              })
               .then(function (text) {
                 if (text) state.corpus.set(file.path, searchText(splitFrontMatter(text).body));
               })
@@ -1721,7 +1965,7 @@
       else if (lowerTitle.indexOf(q) >= 0) score = 85;
       else if (lowerPath.indexOf(q) >= 0) score = 60;
 
-      var tags = (file.tags || []).map(function (t) { return String(t).toLowerCase(); });
+      var tags = fileTags(file).map(function (tag) { return String(tag).toLowerCase(); });
       if (tags.indexOf(q) >= 0) score += 25;
 
       var excerpt = excerptFor(file.path, q);
@@ -1754,9 +1998,9 @@
         ? recent.map(function (f) {
             return '<a class="sr-item" role="option" href="' + toHash(f.path) + '">' +
               '<span class="sr-title">' + iconFor(f.path) + ' ' + escapeHtml(fileTitle(f)) + '</span>' +
-              '<span class="sr-path">' + escapeHtml(dirName(f.path) || '根目录') + '</span></a>';
+              '<span class="sr-path">' + escapeHtml(pathLabel(dirName(f.path))) + '</span></a>';
           }).join('')
-        : '<div class="sr-empty">输入关键词搜索笔记，按 <kbd>/</kbd> 可随时聚焦搜索框。</div>';
+        : '<div class="sr-empty">' + escapeHtml(t('searchTip')) + '</div>';
       box.hidden = false;
       return;
     }
@@ -1764,8 +2008,8 @@
     var results = searchFiles(query).slice(0, 12);
     if (!results.length) {
       var stillLoading = state.corpusPromise && !state.corpusDone;
-      box.innerHTML = '<div class="sr-empty">没有找到与「' + escapeHtml(query.trim()) + '」相关的笔记' +
-        (stillLoading ? '（正在读取全文…）' : '') + '</div>';
+      box.innerHTML = '<div class="sr-empty">' + escapeHtml(t('noResults')) +
+        (stillLoading ? ' (' + escapeHtml(t('searching')) + ')' : '') + '</div>';
       box.hidden = false;
       if (stillLoading) loadCorpus().then(function () {
         var input = $('#search');
@@ -1777,7 +2021,7 @@
     box.innerHTML = results.map(function (r) {
       return '<a class="sr-item" role="option" href="' + toHash(r.file.path) + '">' +
         '<span class="sr-title">' + iconFor(r.file.path) + ' ' + escapeHtml(r.title) + '</span>' +
-        '<span class="sr-path">' + escapeHtml(r.excerpt || dirName(r.file.path) || '根目录') + '</span></a>';
+        '<span class="sr-path">' + escapeHtml(r.excerpt || pathLabel(dirName(r.file.path))) + '</span></a>';
     }).join('');
     box.hidden = false;
   }
@@ -1823,6 +2067,7 @@
     setupSearchUi();
     setupWindowUi();
     setupDockUi();
+    setupLangUi();
     setupKeyboard();
     setupScrollUi();
 
@@ -1870,7 +2115,7 @@
       btn.addEventListener('click', function () {
         toggleExpandAll();
         setMenuOpen(false);
-        toast(allExpanded() ? '已展开全部目录' : '已收起全部目录');
+        toast(allExpanded() ? t('expandedAll') : t('collapsedAll'));
       });
     });
   }
@@ -1933,13 +2178,13 @@
     var close = $('#win-close');
     if (close) close.addEventListener('click', function () {
       closeWindow();
-      toast('窗口已关闭，可从程序坞重新打开');
+      toast(t('windowClosed'));
     });
 
     var min = $('#win-min');
     if (min) min.addEventListener('click', function () {
       closeWindow();
-      toast('窗口已最小化到程序坞');
+      toast(t('windowMinimized'));
     });
 
     $$('#win-zoom, #mb-zoom').forEach(function (btn) {
@@ -1952,7 +2197,7 @@
     var reopen = $('#reopen-btn');
     if (reopen) reopen.addEventListener('click', function () {
       openWindow();
-      toast('窗口已重新打开');
+      toast(t('windowReopened'));
     });
 
     win.addEventListener('dblclick', function (e) {
@@ -1980,6 +2225,16 @@
       btn.addEventListener('click', function () {
         setMenuOpen(false);
         toggleTheme();
+      });
+    });
+  }
+
+  function setupLangUi() {
+    $$('#lang-btn, #lang-btn-top, #mb-lang').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        setMenuOpen(false);
+        toggleLanguage();
       });
     });
   }
