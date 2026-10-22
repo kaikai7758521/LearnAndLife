@@ -5,7 +5,7 @@
 没有构建步骤、没有依赖安装：把 `.md` 文件放进仓库，推送到 GitHub，Pages 就会自动更新。
 
 > [!TIP]
-> 侧边栏目录来自 `manifest.json`，由 GitHub Action 在每次提交 `.md` 后自动生成并提交。
+> 侧边栏目录来自 `manifest.json`，由 `scripts/update-readme.py`（GitHub Action 自动调用）在每次提交 `.md` 后刷新并提交。
 > 新建笔记只需要在 GitHub 网页上创建目录和文件，不需要在本地运行任何命令。
 
 ## 个性化站点
@@ -84,16 +84,16 @@
 
 4. **等待自动更新**：提交后不需要做任何事——
 
-   - GitHub Action 检测到 `.md` 变化，自动运行 `scripts/build-manifest.ps1`、`scripts/translate-notes.py` 和 `scripts/update-readme.py`，刷新并提交 `manifest.json`、`manifest.en.json`、`README.md`、`README.en.md` 与英文译文；
+   - GitHub Action 检测到 `.md` 变化，自动运行 `scripts/translate-notes.py` 和 `scripts/update-readme.py`（后者同时刷新 `manifest.json` 与中英文目录），刷新并提交 `manifest.json`、`manifest.en.json`、`README.md`、`README.en.md` 与英文译文；
    - GitHub Pages 随之重新部署；
    - 部署完成后刷新页面，左侧目录、搜索和首页的「学习方向 / 最近更新」会自动出现新目录和新笔记。
 
 > [!NOTE]
-> `manifest.json` 与 `README.md` 的标记区由脚本自动维护，不要手动修改。
+> `manifest.json`、`manifest.en.json` 与 `README.md` / `README.en.md` 的标记区由脚本自动维护，不要手动修改。
 
 ## 索引文件 `manifest.json`
 
-GitHub Action 会自动运行 `scripts/build-manifest.ps1` 扫描所有 Markdown 生成索引（本地无需执行），每篇笔记包含：
+`scripts/update-readme.py` 会扫描所有 Markdown 生成索引（Action 会自动运行），每篇笔记包含：
 
 | 字段 | 说明 |
 | --- | --- |
@@ -105,24 +105,26 @@ GitHub Action 会自动运行 `scripts/build-manifest.ps1` 扫描所有 Markdown
 | `tags` | front matter 的 `tags` 数组，用于标签搜索 |
 | `size` | 字节数 |
 
-## 更新 README 目录
+## 更新索引与 README 目录
 
-`README.md` 与 `README.en.md` 中 `<!-- NOTES:START -->` 与 `<!-- NOTES:END -->` 之间的内容由脚本自动生成。需要手动刷新时，在仓库根目录执行：
+`manifest.json`、`README.md` 与 `README.en.md` 由同一个脚本生成。需要手动刷新时，在仓库根目录执行：
 
 ```bash
 python3 scripts/update-readme.py
 ```
 
-- 脚本会扫描所有中文笔记，读取 front matter 的 `title`、第一个 `#` 标题和 H2–H4 小标题；
-- 存在英文译文时，会同步扫描 `.en.md` 生成英文目录 `README.en.md`；
+- 脚本会先扫描所有中文笔记，刷新 `manifest.json`（跳过 `.en.md`、README / USAGE）；
+- 再读取 front matter 的 `title`、第一个 `#` 标题和 H2–H4 小标题，生成 `README.md`；
+- 存在英文译文时，会同步扫描 `.en.md` 生成英文目录 `README.en.md` 与英文索引 `manifest.en.json`；
 - 输出为纯目录形式：笔记标题本身即链接，小标题作为嵌套链接，行尾不再追加 URL；
 - 自动生成与页面一致的锚点链接，并按「学习方向 / 内容」分组；
 - 只替换两个标记之间的内容，标记之外的介绍和说明保持不变；
 - 重复执行结果一致；加 `--check` 只检查是否需要更新，不写入文件；
+- 加 `--no-manifest` 可只刷新 README，不重写 `manifest.json` / `manifest.en.json`；
 - 使用自定义域名时，可用 `--base-url https://your-domain/` 指定链接前缀。
 
 > [!TIP]
-> 推送到 GitHub 后，Action 会自动执行该脚本并提交 `README.md`，通常不需要在本地运行。
+> 推送到 GitHub 后，Action 会自动执行该脚本并提交索引与目录，通常不需要在本地运行。`scripts/build-manifest.ps1` 仍保留给 Windows 用户单独生成索引，但 Action 不再需要它。
 
 ## 中英文切换与自动翻译
 
@@ -168,7 +170,7 @@ python3 scripts/translate-notes.py --strict  # 缺失 / 过期 / 失败时返回
 
 ```bash
 python3 scripts/translate-notes.py     # 刷新 manifest.en.json
-python3 scripts/update-readme.py       # 刷新 README.md 与 README.en.md
+python3 scripts/update-readme.py       # 刷新 manifest.json 与 README.md / README.en.md
 ```
 
 > [!IMPORTANT]
@@ -242,11 +244,11 @@ python3 -m http.server 8080
 | `assets/css/style.css` | 全部样式、macOS 桌面外观与深色主题 |
 | `manifest.json` | 自动生成的笔记索引（请一起提交） |
 | `.nojekyll` | 让 GitHub Pages 跳过 Jekyll，原样发布 `.md` 笔记（请勿删除） |
-| `.github/workflows/build-manifest.yml` | 推送 `.md` 后自动生成并提交索引 |
+| `.github/workflows/build-manifest.yml` | 推送 `.md` 后自动刷新索引、翻译与 README 目录并提交 |
 | `scripts/serve.ps1` | 本地预览服务器（Windows PowerShell 可选；macOS 用 `python3 -m http.server 8080`） |
-| `scripts/build-manifest.ps1` | 生成索引的脚本（由 Action 自动调用，无需手动运行） |
+| `scripts/build-manifest.ps1` | 可选，Windows 下单独生成索引；Action 已由 `update-readme.py` 统一生成 |
 | `scripts/translate-notes.py` | 生成 / 更新英文译文与 `manifest.en.json`（由 Action 自动调用，也可本地运行） |
-| `scripts/update-readme.py` | 重新生成 README.md / README.en.md 的笔记目录（Action 自动调用，也可本地运行） |
+| `scripts/update-readme.py` | 刷新 `manifest.json` 与 README.md / README.en.md 目录（Action 自动调用，也可本地运行） |
 | `manifest.en.json` | 自动生成的英文标题 / 标签索引（请一起提交） |
 | `README.en.md` | 自动生成的英文首页与目录（请一起提交） |
 | `USAGE.md` | 使用说明（本文件） |

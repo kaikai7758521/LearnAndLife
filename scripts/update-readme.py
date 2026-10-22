@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-扫描仓库中的 Markdown 笔记，重新生成 README.md / README.en.md 里的笔记目录。
+扫描仓库中的 Markdown 笔记，重新生成 manifest.json、README.md 与 README.en.md。
 
 用法（在仓库根目录执行）：
     python3 scripts/update-readme.py
     python3 scripts/update-readme.py --check
+    python3 scripts/update-readme.py --no-manifest
     python3 scripts/update-readme.py --base-url https://example.github.io/repo/
 
 README.md 与 README.en.md 中被下面两行注释包住的内容会被整体替换：
@@ -17,20 +18,31 @@ README.md 与 README.en.md 中被下面两行注释包住的内容会被整体�
     - 小标题取 H2–H4，锚点使用页面同款 slugify 规则。
 生成结果是一份目录：笔记标题链接到页面，H2–H4 作为嵌套链接指向对应章节。
 英文目录来自 `<笔记>.en.md`（由 scripts/translate-notes.py 生成）。
+
+manifest.json 的字段与 scripts/build-manifest.ps1 保持一致：
+    - title / date / lastModified / icon / tags / size；
+    - 日期优先沿用旧 manifest，lastModified 优先取 Git 最后一次提交；
+    - 自动跳过 *.en.md 与 README / USAGE 等非笔记文件。
+manifest.en.json 由 *.en.md 的 front matter 生成，结构与 translate-notes.py 一致。
 """
 
 from __future__ import annotations
 
 import argparse
 import html
+import json
 import re
+import shutil
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 README = ROOT / "README.md"
 README_EN = ROOT / "README.en.md"
+MANIFEST = ROOT / "manifest.json"
+MANIFEST_EN = ROOT / "manifest.en.json"
 CONFIG_JS = ROOT / "assets" / "js" / "config.js"
 
 START_MARK = "<!-- NOTES:START -->"
@@ -308,6 +320,189 @@ def apply_block(readme: str, block: str) -> str:
     return readme + "\n" + block
 
 
+def parse_tag_list(value: str) -> list[str]:
+    value = (value or "").strip()
+    if value.startswith("[") and value.endswith("]"):
+        value = value[1:-1]
+    return [part.strip().strip('"').strip("'") for part in value.split(",") if part.strip()]
+
+
+def git_last_modified(rel: str, cache: dict[str, str]) -> str:
+    """与 build-manifest.ps1 的 Get-GitDate 一致，返回 yyyy-MM-dd。"""
+    if rel in cache:
+        return cache[rel]
+
+    git_exe = shutil.which("git")
+    if not git_exe:
+        cache[rel] = ""
+        return ""
+
+    try:
+        result = subprocess.run(
+            [git_exe, "-C", str(ROOT), "log", "-1", "--format=%cI", "--", rel],
+            capture_output=True, text=True, timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        cache[rel] = ""
+        return ""
+
+    iso = result.stdout.strip()
+    if result.returncode != 0 or not iso:
+        cache[rel] = ""
+        return ""
+
+    try:
+        value = datetime.fromisoformat(iso.replace("Z", "+00:00")).date().isoformat()
+    except ValueError:
+        match = re.match(r"^(\d{4}-\d{2}-\d{2})", iso)
+        value = match.group(1) if match else ""
+    cache[rel] = value
+    return value
+
+
+def load_previous_manifest() -> dict[str, dict[str, str]]:
+    if not MANIFEST.is_file():
+        return {}
+    try:
+        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+    previous: dict[str, dict[str, str]] = {}
+    for item in data.get("files", []) if isinstance(data, dict) else []:
+        if not isinstance(item, dict) or not item.get("path"):
+            continue
+        previous[str(item["path"])] = {
+            "date": str(item.get("date", "")),
+            "lastModified": str(item.get("lastModified", "")),
+            "icon": str(item.get("icon", "")),
+        }
+    return previous
+
+
+def build_manifest_data() -> dict[str, object]:
+    """扫描笔记生成 manifest.json 数据，字段与 build-manifest.ps1 保持一致。"""
+    previous = load_previous_manifest()
+    git_cache: dict[str, str] = {}
+    files: list[dict[str, object]] = []
+
+    for file_path in ROOT.rglob("*.md"):
+        rel = file_path.relative_to(ROOT).as_posix()
+        parts = rel.split("/")
+        if rel.lower().endswith(EN_SUFFIX):
+            continue
+        if any(part.startswith(".") for part in parts):
+            continue
+        if rel in EXCLUDE_FILES or parts[0] in EXCLUDE_DIRS:
+            continue
+
+        text = file_path.read_text(encoding="utf-8-sig")
+        meta, body = split_front_matter(text)
+        headings = extract_headings(body)
+
+        title = meta.get("title", "").strip()
+        if not title:
+            title = next((value for level, value in headings if level == 1), "")
+        if not title:
+            title = file_path.stem
+
+        old = previous.get(rel, {})
+        date = meta.get("date", "").strip() or old.get("date", "")
+        last_modified = (meta.get("updated", "").strip()
+                         or meta.get("lastmodified", "").strip()
+                         or git_last_modified(rel, git_cache)
+                         or old.get("lastModified", ""))
+        icon = meta.get("icon", "").strip() or old.get("icon", "")
+
+        stat = file_path.stat()
+        mtime = datetime.fromtimestamp(stat.st_mtime).date().isoformat()
+        date = date or mtime
+        last_modified = last_modified or mtime
+
+        files.append({
+            "path": rel,
+            "title": title.strip(),
+            "date": date.strip(),
+            "lastModified": last_modified.strip(),
+            "icon": icon.strip(),
+            "tags": parse_tag_list(meta.get("tags", "")),
+            "size": stat.st_size,
+        })
+
+    files.sort(key=lambda item: str(item["path"]))
+    return {
+        "generatedAt": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "count": len(files),
+        "files": files,
+    }
+
+
+def build_en_manifest_data() -> dict[str, object]:
+    """扫描英文译文生成 manifest.en.json，字段与 translate-notes.py 保持一致。"""
+    files: list[dict[str, object]] = []
+
+    for target in ROOT.rglob("*" + EN_SUFFIX):
+        rel = target.relative_to(ROOT).as_posix()
+        parts = rel.split("/")
+        if any(part.startswith(".") for part in parts):
+            continue
+        if rel in EXCLUDE_FILES or parts[0] in EXCLUDE_DIRS:
+            continue
+
+        zh_rel = rel[:-len(EN_SUFFIX)] + ".md"
+        if not (ROOT / zh_rel).is_file():
+            continue
+
+        meta, body = split_front_matter(target.read_text(encoding="utf-8-sig"))
+        headings = extract_headings(body)
+        title = meta.get("title", "").strip()
+        if not title:
+            title = next((value for level, value in headings if level == 1), "")
+        if not title:
+            title = display_name(Path(zh_rel).name)
+
+        files.append({
+            "path": zh_rel,
+            "pathEn": rel,
+            "title": title,
+            "description": (meta.get("description") or meta.get("summary") or "").strip(),
+            "tags": parse_tag_list(meta.get("tags", "")),
+        })
+
+    files.sort(key=lambda item: str(item["path"]))
+    return {
+        "generatedAt": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "count": len(files),
+        "files": files,
+    }
+
+
+def manifest_changed(old: dict[str, object] | None, new: dict[str, object]) -> bool:
+    if not old:
+        return True
+    old_copy = dict(old)
+    new_copy = dict(new)
+    old_copy.pop("generatedAt", None)
+    new_copy.pop("generatedAt", None)
+    return old_copy != new_copy
+
+
+def read_manifest_json(path: Path = MANIFEST) -> dict[str, object] | None:
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def write_manifest(data: dict[str, object], path: Path = MANIFEST) -> None:
+    text = json.dumps(data, ensure_ascii=False, indent=2)
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(text)
+
+
 def readme_en_template() -> str:
     return """# 📚 My Learning Notes
 
@@ -325,14 +520,25 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="根据笔记内容重新生成 README.md / README.en.md 的笔记目录。")
+    parser = argparse.ArgumentParser(description="根据笔记内容重新生成 manifest.json 与中英文 README 目录。")
     parser.add_argument("--base-url", default="", help="GitHub Pages 站点地址，例如 https://owner.github.io/repo/")
-    parser.add_argument("--check", action="store_true", help="只检查 README 是否需要更新，不写入文件")
+    parser.add_argument("--check", action="store_true", help="只检查索引与 README 是否需要更新，不写入文件")
+    parser.add_argument("--no-manifest", action="store_true", help="只更新 README，不刷新 manifest.json / manifest.en.json")
     args = parser.parse_args()
 
     if not README.is_file():
         print("找不到 README.md。", file=sys.stderr)
         return 1
+
+    manifest_data = None
+    manifest_en_data = None
+    changed_manifest = False
+    changed_manifest_en = False
+    if not args.no_manifest:
+        manifest_data = build_manifest_data()
+        changed_manifest = manifest_changed(read_manifest_json(MANIFEST), manifest_data)
+        manifest_en_data = build_en_manifest_data()
+        changed_manifest_en = manifest_changed(read_manifest_json(MANIFEST_EN), manifest_en_data)
 
     base_url = detect_base_url(args.base_url)
 
@@ -354,11 +560,27 @@ def main() -> int:
 
     if args.check:
         messages = []
+        if not args.no_manifest:
+            messages.append("manifest.json 需要更新。" if changed_manifest else "manifest.json 已是最新。")
+            messages.append("manifest.en.json 需要更新。" if changed_manifest_en else "manifest.en.json 已是最新。")
         messages.append("README.md 需要更新。" if changed else "README.md 已是最新。")
         if en_notes:
             messages.append("README.en.md 需要更新。" if changed_en else "README.en.md 已是最新。")
         print("\n".join(messages))
-        return 1 if changed or changed_en else 0
+        return 1 if changed or changed_en or changed_manifest or changed_manifest_en else 0
+
+    if not args.no_manifest:
+        if changed_manifest and manifest_data:
+            write_manifest(manifest_data, MANIFEST)
+            print(f"已更新 manifest.json：{len(manifest_data['files'])} 篇笔记。")
+        else:
+            print(f"manifest.json 已是最新：{len(manifest_data['files']) if manifest_data else 0} 篇笔记。")
+
+        if changed_manifest_en and manifest_en_data:
+            write_manifest(manifest_en_data, MANIFEST_EN)
+            print(f"已更新 manifest.en.json：{len(manifest_en_data['files'])} 篇英文笔记。")
+        else:
+            print(f"manifest.en.json 已是最新：{len(manifest_en_data['files']) if manifest_en_data else 0} 篇英文笔记。")
 
     if changed:
         README.write_text(updated, encoding="utf-8")

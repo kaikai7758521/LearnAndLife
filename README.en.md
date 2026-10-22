@@ -1,4 +1,4 @@
-# 📚 My Learning Notes
+# 📚 My  Notes
 
 Markdown study notes organized by **learning area / topic / detail**. This is the complete table of contents — click any title to open the page or section. Use the `EN` / `中文` button in the title bar to switch languages.
 
