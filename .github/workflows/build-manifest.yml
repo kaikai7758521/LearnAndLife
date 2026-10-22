@@ -28,9 +28,13 @@ jobs:
 
       - name: Translate notes to English
         env:
+          TRANSLATE_PROVIDER: ${{ vars.TRANSLATE_PROVIDER }}
           TRANSLATE_API_KEY: ${{ secrets.TRANSLATE_API_KEY }}
           TRANSLATE_API_URL: ${{ vars.TRANSLATE_API_URL }}
           TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL }}
+          MYMEMORY_EMAIL: ${{ vars.MYMEMORY_EMAIL }}
+          LIBRETRANSLATE_URL: ${{ vars.LIBRETRANSLATE_URL }}
+          LIBRETRANSLATE_API_KEY: ${{ secrets.LIBRETRANSLATE_API_KEY }}
         run: python3 scripts/translate-notes.py
 
       - name: Update manifest and README outlines

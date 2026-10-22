@@ -140,28 +140,43 @@ python3 scripts/update-readme.py
 `scripts/translate-notes.py` 会扫描所有中文笔记：
 
 - 用 `translatedFrom`（中文源文件的 SHA-256）判断译文是否过期，内容没变就跳过；
-- 调用 OpenAI 兼容的 Chat Completions 接口翻译，保留代码、表格、公式、Mermaid 和链接结构；
+- **默认使用免费服务，不需要 API Key**：先调用 Google 免密钥接口，失败后自动回退 MyMemory；
+- 翻译前会把代码块、行内代码、公式、链接地址和 Markdown 标记替换成占位符，翻译后再还原，避免破坏结构；
 - 把相对 `.md` 链接自动改写为已有的 `.en.md`；
 - 生成 `manifest.en.json`（英文标题 / 标签），供站点侧边栏和搜索使用。
 
-在仓库 **Settings → Secrets and variables → Actions** 中添加：
+可用的翻译服务：
+
+| 服务 | 需要密钥 | 说明 |
+| --- | --- | --- |
+| `google` | 否 | 默认首选，免密钥接口；非官方接口，可能被限流 |
+| `mymemory` | 否 | Google 失败时自动回退；匿名约 5000 字符/天，填写邮箱后约 50000 字符/天 |
+| `libretranslate` | 视实例 | 可自建或使用公共实例，通过 `LIBRETRANSLATE_URL` 指定地址 |
+| `openai` | 是 | 质量最好；兼容 OpenAI、DeepSeek、Moonshot 等 Chat Completions 接口 |
+
+在仓库 **Settings → Secrets and variables → Actions** 中按需添加（全部可选）：
 
 | 类型 | 名称 | 说明 |
 | --- | --- | --- |
-| Secret | `TRANSLATE_API_KEY` | 必填，也可用 `OPENAI_API_KEY`；兼容 OpenAI、DeepSeek、Moonshot 等服务 |
-| Variable | `TRANSLATE_API_URL` | 可选，默认 `https://api.openai.com/v1/chat/completions` |
-| Variable | `TRANSLATE_MODEL` | 可选，默认 `gpt-4o-mini` |
+| Variable | `TRANSLATE_PROVIDER` | `auto`（默认）/ `google` / `mymemory` / `libretranslate` / `openai` |
+| Variable | `MYMEMORY_EMAIL` | MyMemory 可选邮箱，可提升免费额度 |
+| Secret | `TRANSLATE_API_KEY` | 使用 `openai` 时填写，也可用 `OPENAI_API_KEY` |
+| Variable | `TRANSLATE_API_URL` | 使用 `openai` 时的接口地址，默认 `https://api.openai.com/v1/chat/completions` |
+| Variable | `TRANSLATE_MODEL` | 使用 `openai` 时的模型，默认 `gpt-4o-mini` |
+| Variable | `LIBRETRANSLATE_URL` | 使用 `libretranslate` 时的服务地址 |
+| Secret | `LIBRETRANSLATE_API_KEY` | 使用需要密钥的 LibreTranslate 实例时填写 |
 
 > [!NOTE]
-> 没有配置密钥时，脚本会安全跳过：已有译文继续使用，缺失译文的笔记在英文模式下自动回退中文并提示，不会影响站点发布。
+> 默认的 Google / MyMemory 都是免费服务，不配置任何密钥也能工作。若所有服务都失败，已有译文会保留，缺失译文的笔记在英文模式下回退中文并提示，不影响站点发布。
 
 手动执行：
 
 ```bash
-python3 scripts/translate-notes.py           # 只翻译缺失 / 过期的笔记
-python3 scripts/translate-notes.py --force   # 全部重新翻译
-python3 scripts/translate-notes.py --check   # 只检查，不写文件
-python3 scripts/translate-notes.py --strict  # 缺失 / 过期 / 失败时返回非零状态
+python3 scripts/translate-notes.py                       # 只翻译缺失 / 过期的笔记（默认免费服务）
+python3 scripts/translate-notes.py --provider mymemory   # 指定翻译服务
+python3 scripts/translate-notes.py --force               # 全部重新翻译
+python3 scripts/translate-notes.py --check               # 只检查，不写文件
+python3 scripts/translate-notes.py --strict              # 翻译失败时返回非零状态
 ```
 
 ### 手动维护译文
@@ -247,7 +262,7 @@ python3 -m http.server 8080
 | `.github/workflows/build-manifest.yml` | 推送 `.md` 后自动刷新索引、翻译与 README 目录并提交 |
 | `scripts/serve.ps1` | 本地预览服务器（Windows PowerShell 可选；macOS 用 `python3 -m http.server 8080`） |
 | `scripts/build-manifest.ps1` | 可选，Windows 下单独生成索引；Action 已由 `update-readme.py` 统一生成 |
-| `scripts/translate-notes.py` | 生成 / 更新英文译文与 `manifest.en.json`（由 Action 自动调用，也可本地运行） |
+| `scripts/translate-notes.py` | 生成 / 更新英文译文与 `manifest.en.json`（默认使用免费 Google / MyMemory，由 Action 自动调用，也可本地运行） |
 | `scripts/update-readme.py` | 刷新 `manifest.json` 与 README.md / README.en.md 目录（Action 自动调用，也可本地运行） |
 | `manifest.en.json` | 自动生成的英文标题 / 标签索引（请一起提交） |
 | `README.en.md` | 自动生成的英文首页与目录（请一起提交） |

@@ -164,6 +164,8 @@ window.SITE_I18N = {
   },
   dirs: {
     '前端': 'Frontend',
+    '日常生活': 'Daily Life',
+    '运动': 'Sports',
     '后端': 'Backend',
     '计算机基础': 'Computer Science',
     '数据结构': 'Data Structures',

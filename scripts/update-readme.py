@@ -51,11 +51,13 @@ EN_SUFFIX = ".en.md"
 
 # 与 assets/js/config.js 中的 excludeDirs / excludeFiles 保持一致
 EXCLUDE_DIRS = {"assets", "scripts", "node_modules", ".github", "_site", ".jekyll-cache"}
-EXCLUDE_FILES = {"README.md", "README.en.md", "USAGE.md"}
+EXCLUDE_FILES = {"README.md", "README.en.md", "USAGE.md", "AGENTS.md"}
 
 # 英文目录中展示的文件夹名称（未列出的目录保留原名）
 DIR_LABELS_EN = {
     "前端": "Frontend",
+    "日常生活": "Daily Life",
+    "运动": "Sports",
     "后端": "Backend",
     "计算机基础": "Computer Science",
     "数据结构": "Data Structures",

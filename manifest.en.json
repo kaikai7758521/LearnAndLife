@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-22T19:40:34+00:00",
-  "count": 3,
+  "generatedAt": "2026-10-23T03:52:39+08:00",
+  "count": 5,
   "files": [
     {
       "path": "前端/JavaScript/01-变量与类型.md",
@@ -21,6 +21,26 @@
         "JavaScript",
         "Async",
         "Event Loop"
+      ]
+    },
+    {
+      "path": "日常生活/运动/01-篮球.md",
+      "pathEn": "日常生活/运动/01-篮球.en.md",
+      "title": "Basketball",
+      "description": "",
+      "tags": [
+        "basketball",
+        "sports"
+      ]
+    },
+    {
+      "path": "日常生活/运动/02-羽毛球.md",
+      "pathEn": "日常生活/运动/02-羽毛球.en.md",
+      "title": "Badminton",
+      "description": "",
+      "tags": [
+        "badminton",
+        "sports"
       ]
     },
     {

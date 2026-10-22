@@ -32,7 +32,10 @@ python3 scripts/update-readme.py
 python3 scripts/update-readme.py --check        # verify, non-zero if stale
 python3 scripts/update-readme.py --no-manifest  # README only
 
-# Translations (needs TRANSLATE_API_KEY or OPENAI_API_KEY; skips safely without one)
+# Translations (free by default: Google -> MyMemory; no key required)
+# Optional: TRANSLATE_PROVIDER=google|mymemory|libretranslate|openai,
+# TRANSLATE_API_KEY / TRANSLATE_API_URL / TRANSLATE_MODEL for openai,
+# MYMEMORY_EMAIL for a higher quota, LIBRETRANSLATE_URL / LIBRETRANSLATE_API_KEY.
 python3 scripts/translate-notes.py
 python3 scripts/translate-notes.py --check
 python3 scripts/translate-notes.py --force

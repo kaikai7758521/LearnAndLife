@@ -34,7 +34,7 @@ window.SITE_CONFIG = {
   // 生成目录索引时需要忽略的目录（仓库根目录相对路径）
   excludeDirs: ['assets', 'scripts', 'node_modules', '.github', '_site', '.jekyll-cache'],
   // 生成目录索引时需要忽略的文件（仓库相对路径）
-  excludeFiles: ['README.md', 'README.en.md', 'USAGE.md'],
+  excludeFiles: ['README.md', 'README.en.md', 'USAGE.md', 'AGENTS.md'],
 
   // 每个页面底部显示「最近修改」日期（数据来自 manifest.json / Git 提交）
   showLastModified: true,

@@ -21,6 +21,11 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
   - [Timers Are Not Precise](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/02-异步与事件循环.en.md@timers-are-not-precise)
   - [Related Notes](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/02-异步与事件循环.en.md@related-notes)
 
+## Daily Life / Sports
+
+- [Basketball](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/运动/01-篮球.en.md)
+- [Badminton](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/运动/02-羽毛球.en.md)
+
 ## Computer Science / Data Structures
 
 - [Arrays and Linked Lists](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/数据结构/01-数组与链表.en.md)
