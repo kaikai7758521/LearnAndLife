@@ -24,6 +24,7 @@
 ## 日常生活 / 运动
 
 - [篮球](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/运动/01-篮球.md)
+- [羽毛球](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/运动/02-羽毛球.md)
 
 ## 计算机基础 / 数据结构
 
