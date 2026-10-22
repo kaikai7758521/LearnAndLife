@@ -84,12 +84,12 @@
 
 4. **等待自动更新**：提交后不需要做任何事——
 
-   - GitHub Action 检测到 `.md` 变化，自动运行 `scripts/translate-notes.py` 和 `scripts/update-readme.py`（后者同时刷新 `manifest.json` 与中英文目录），刷新并提交 `manifest.json`、`manifest.en.json`、`README.md`、`README.en.md` 与英文译文；
+   - GitHub Action 检测到 `.md` 变化，自动运行 `scripts/translate-notes.py` 和 `scripts/update-readme.py`（后者同时刷新 `manifest.json` 与中英文目录），刷新并提交 `manifest.json`、`manifest.en.json`、`README.md`、`en/README.md` 与 `en/` 下的英文译文；
    - GitHub Pages 随之重新部署；
    - 部署完成后刷新页面，左侧目录、搜索和首页的「学习方向 / 最近更新」会自动出现新目录和新笔记。
 
 > [!NOTE]
-> `manifest.json`、`manifest.en.json` 与 `README.md` / `README.en.md` 的标记区由脚本自动维护，不要手动修改。
+> `manifest.json`、`manifest.en.json` 与 `README.md` / `en/README.md` 的标记区由脚本自动维护，不要手动修改。
 
 ## 索引文件 `manifest.json`
 
@@ -107,15 +107,15 @@
 
 ## 更新索引与 README 目录
 
-`manifest.json`、`README.md` 与 `README.en.md` 由同一个脚本生成。需要手动刷新时，在仓库根目录执行：
+`manifest.json`、`README.md` 与 `en/README.md` 由同一个脚本生成。需要手动刷新时，在仓库根目录执行：
 
 ```bash
 python3 scripts/update-readme.py
 ```
 
-- 脚本会先扫描所有中文笔记，刷新 `manifest.json`（跳过 `.en.md`、README / USAGE）；
+- 脚本会先扫描所有中文笔记，刷新 `manifest.json`（跳过 `en/`、README / USAGE）；
 - 再读取 front matter 的 `title`、第一个 `#` 标题和 H2–H4 小标题，生成 `README.md`；
-- 存在英文译文时，会同步扫描 `.en.md` 生成英文目录 `README.en.md` 与英文索引 `manifest.en.json`；
+- 存在英文译文时，会同步扫描 `en/` 生成英文目录 `en/README.md` 与英文索引 `manifest.en.json`；
 - 输出为纯目录形式：笔记标题本身即链接，小标题作为嵌套链接，行尾不再追加 URL；
 - 自动生成与页面一致的锚点链接，并按「学习方向 / 内容」分组；
 - 只替换两个标记之间的内容，标记之外的介绍和说明保持不变；
@@ -128,11 +128,11 @@ python3 scripts/update-readme.py
 
 ## 中英文切换与自动翻译
 
-中文是唯一的内容源。英文译文与中文笔记放在同一目录，文件名加 `.en.md`：
+中文是唯一的内容源。英文译文放在 `en/` 目录下，保持与中文相同的目录结构和文件名：
 
 ```text
 前端/JavaScript/01-变量与类型.md      # 中文原文
-前端/JavaScript/01-变量与类型.en.md   # 英文译文（自动生成或手动维护）
+en/前端/JavaScript/01-变量与类型.md   # 英文译文（自动生成或手动维护）
 ```
 
 ### 自动翻译
@@ -142,7 +142,7 @@ python3 scripts/update-readme.py
 - 用 `translatedFrom`（中文源文件的 SHA-256）判断译文是否过期，内容没变就跳过；
 - **默认使用免费服务，不需要 API Key**：先调用 Google 免密钥接口，失败后自动回退 MyMemory；
 - 翻译前会把代码块、行内代码、公式、链接地址和 Markdown 标记替换成占位符，翻译后再还原，避免破坏结构；
-- 把相对 `.md` 链接自动改写为已有的 `.en.md`；
+- 英文目录与中文目录一一对应，站内相对链接无需改写，切换语言时会自动读取 `en/` 下的对应文件；
 - 生成 `manifest.en.json`（英文标题 / 标签），供站点侧边栏和搜索使用。
 
 可用的翻译服务：
@@ -181,11 +181,11 @@ python3 scripts/translate-notes.py --strict              # 翻译失败时返回
 
 ### 手动维护译文
 
-也可以直接新建 `xxx.en.md`，front matter 至少包含英文 `title`，然后运行：
+也可以直接新建 `en/xxx.md`，front matter 至少包含英文 `title`，然后运行：
 
 ```bash
 python3 scripts/translate-notes.py     # 刷新 manifest.en.json
-python3 scripts/update-readme.py       # 刷新 manifest.json 与 README.md / README.en.md
+python3 scripts/update-readme.py       # 刷新 manifest.json 与 README.md / en/README.md
 ```
 
 > [!IMPORTANT]
@@ -195,7 +195,7 @@ python3 scripts/update-readme.py       # 刷新 manifest.json 与 README.md / RE
 
 - 标题栏右侧的 `EN` / `中文` 按钮，以及菜单中的 🌐 项，都可以切换语言；
 - 选择会记录在 `localStorage` 的 `ln-lang`，下次打开自动恢复；
-- 英文模式会读取 `.en.md`，侧边栏、面包屑、搜索、分页与首页优先使用英文标题；
+- 英文模式会读取 `en/` 下的对应文件，侧边栏、面包屑、搜索、分页与首页优先使用英文标题；
 - 英文缺失时自动显示中文原文，并给出提示。
 
 ## 本地预览
@@ -262,10 +262,10 @@ python3 -m http.server 8080
 | `.github/workflows/build-manifest.yml` | 推送 `.md` 后自动刷新索引、翻译与 README 目录并提交 |
 | `scripts/serve.ps1` | 本地预览服务器（Windows PowerShell 可选；macOS 用 `python3 -m http.server 8080`） |
 | `scripts/build-manifest.ps1` | 可选，Windows 下单独生成索引；Action 已由 `update-readme.py` 统一生成 |
-| `scripts/translate-notes.py` | 生成 / 更新英文译文与 `manifest.en.json`（默认使用免费 Google / MyMemory，由 Action 自动调用，也可本地运行） |
-| `scripts/update-readme.py` | 刷新 `manifest.json` 与 README.md / README.en.md 目录（Action 自动调用，也可本地运行） |
+| `scripts/translate-notes.py` | 生成 / 更新 `en/` 下的英文译文与 `manifest.en.json`（默认使用免费 Google / MyMemory，由 Action 自动调用，也可本地运行） |
+| `scripts/update-readme.py` | 刷新 `manifest.json` 与 README.md / en/README.md 目录（Action 自动调用，也可本地运行） |
 | `manifest.en.json` | 自动生成的英文标题 / 标签索引（请一起提交） |
-| `README.en.md` | 自动生成的英文首页与目录（请一起提交） |
+| `en/README.md` | 自动生成的英文首页与目录（请一起提交） |
 | `USAGE.md` | 使用说明（本文件） |
 
 ## 快捷操作

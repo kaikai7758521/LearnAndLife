@@ -42,10 +42,10 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          for file in manifest.json manifest.en.json README.md README.en.md; do
+          for file in manifest.json manifest.en.json README.md en/README.md; do
             if [ -f "$file" ]; then git add "$file"; fi
           done
-          git add -- '*.en.md' 2>/dev/null || true
+          git add -- 'en' 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "索引、译文与 README 目录均是最新，无需提交。"
             exit 0

@@ -6,7 +6,7 @@
 约定
 ----
 - 中文笔记： 前端/JavaScript/01-变量与类型.md
-- 英文译文： 前端/JavaScript/01-变量与类型.en.md
+- 英文译文： en/前端/JavaScript/01-变量与类型.md
 - 译文 front matter 中的 translatedFrom 记录中文源文件的 SHA-256，
   源文件变化后会重新翻译；内容未变化时直接跳过。
 
@@ -56,15 +56,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-EN_SUFFIX = ".en.md"
+EN_DIR = "en"
 EN_MANIFEST = "manifest.en.json"
 
 # 与 assets/js/config.js、scripts/update-readme.py 保持一致
-EXCLUDE_DIRS = {"assets", "scripts", "node_modules", ".github", "_site", ".jekyll-cache"}
+EXCLUDE_DIRS = {"en", "assets", "scripts", "node_modules", ".github", "_site", ".jekyll-cache"}
 EXCLUDE_FILES = {"README.md", "README.en.md", "USAGE.md", "AGENTS.md"}
 
 FRONT_MATTER_RE = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.S)
-LINK_RE = re.compile(r"(!?\[[^\]]*\]\()([^)\s]+)(\))")
 HEADING_RE = re.compile(r"^\s{0,3}#\s+(.+?)\s*#*\s*$", re.M)
 CJK_RE = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff]")
 TOKEN_RE = re.compile(r"ZXQ[A-Z]+\d+QZX")
@@ -105,8 +104,8 @@ Rules:
 1. Keep the Markdown structure exactly: front matter, headings, lists, tables, blockquotes, callouts, code fences, math, Mermaid diagrams.
 2. Translate natural-language prose, heading text, table cells, alt text and diagram labels.
 3. Never translate code, identifiers, command names, URLs, file paths or library names.
-4. Keep relative links and images working. If a link points to another note in this repository,
-   keep the same path and only change the `.md` extension to `.en.md` when a translation exists.
+4. Keep relative links and images unchanged. The English tree mirrors the Chinese paths under `en/`,
+   so leave relative `.md` links as they are.
 5. Keep the original front matter keys. Translate `title`, `description` and `tags` values;
    do not add `translatedFrom`, `translatedAt` or `lang` (the script adds them).
 6. Return only the translated Markdown document, with no explanation and no surrounding code fence.
@@ -196,10 +195,7 @@ def source_hash(text: str) -> str:
 
 
 def english_path(path: Path) -> Path:
-    value = path.as_posix()
-    if not value.lower().endswith(".md"):
-        return Path(value + EN_SUFFIX)
-    return Path(value[:-3] + EN_SUFFIX)
+    return Path(EN_DIR) / path
 
 
 def is_excluded(rel: str) -> bool:
@@ -215,7 +211,7 @@ def collect_sources() -> list[Path]:
     sources: list[Path] = []
     for path in ROOT.rglob("*.md"):
         rel = path.relative_to(ROOT).as_posix()
-        if rel.lower().endswith(EN_SUFFIX) or is_excluded(rel):
+        if rel.lower().endswith(".en.md") or is_excluded(rel):
             continue
         sources.append(path)
     return sorted(sources, key=lambda p: p.relative_to(ROOT).as_posix())
@@ -706,32 +702,6 @@ def clean_response(text: str) -> str:
     return text + "\n"
 
 
-def rewrite_links(text: str, source: Path) -> str:
-    """把指向已有译文的相对 .md 链接改成 .en.md。"""
-    source_dir = source.parent
-
-    def replace(match: re.Match[str]) -> str:
-        prefix, target, suffix = match.groups()
-        if re.match(r"^[a-z][a-z0-9+.-]*:", target, re.I) or target.startswith(("#", "/")):
-            return match.group(0)
-
-        file_part, sep, anchor = target.partition("#")
-        if not file_part.lower().endswith(".md") or file_part.lower().endswith(EN_SUFFIX):
-            return match.group(0)
-
-        candidate = (source_dir / file_part).resolve()
-        try:
-            rel = candidate.relative_to(ROOT)
-        except ValueError:
-            return match.group(0)
-        if not (ROOT / english_path(rel)).is_file():
-            return match.group(0)
-
-        return prefix + file_part[:-3] + EN_SUFFIX + sep + anchor + suffix
-
-    return LINK_RE.sub(replace, text)
-
-
 def inject_metadata(text: str, digest: str) -> str:
     text = text.replace("\r\n", "\n").lstrip("\ufeff").strip() + "\n"
     match = FRONT_MATTER_RE.match(text)
@@ -761,42 +731,30 @@ def translate_file(source: Path, target: Path, digest: str, provider: str) -> No
     if not translated.strip():
         raise ProviderError("译文为空")
     translated = inject_metadata(translated, digest)
-    translated = rewrite_links(translated, source)
     target.parent.mkdir(parents=True, exist_ok=True)
     write_text(target, translated)
     log(f"  已生成 {target.relative_to(ROOT).as_posix()}（{provider}）")
 
 
-def refresh_all_links() -> None:
-    """所有译文生成后统一刷新链接，避免交叉引用因翻译顺序漏改。"""
-    for source in collect_sources():
-        target = ROOT / english_path(source.relative_to(ROOT))
-        if not target.is_file():
-            continue
-        text = read_text(target)
-        updated = rewrite_links(text, source)
-        if updated != text:
-            write_text(target, updated)
-            log(f"  已更新链接 {target.relative_to(ROOT).as_posix()}")
-
-
 def build_en_manifest() -> int:
     entries: list[dict[str, object]] = []
 
-    for target in ROOT.rglob("*" + EN_SUFFIX):
-        rel = target.relative_to(ROOT).as_posix()
-        if is_excluded(rel):
+    for target in (ROOT / EN_DIR).rglob("*.md"):
+        rel_en = target.relative_to(ROOT).as_posix()
+        rel = rel_en[len(EN_DIR) + 1:]
+        parts = rel.split("/")
+        if any(part.startswith(".") for part in parts) or rel in EXCLUDE_FILES:
             continue
-
-        zh_rel = rel[:-len(EN_SUFFIX)] + ".md"
-        if not (ROOT / zh_rel).is_file():
+        if parts[0] in EXCLUDE_DIRS:
+            continue
+        if not (ROOT / rel).is_file():
             continue
 
         meta, body = split_front_matter(read_text(target))
-        title = meta.get("title", "").strip() or first_heading(body) or display_name(Path(zh_rel).name)
+        title = meta.get("title", "").strip() or first_heading(body) or display_name(Path(rel).name)
         entries.append({
-            "path": zh_rel,
-            "pathEn": rel,
+            "path": rel,
+            "pathEn": rel_en,
             "title": title,
             "description": (meta.get("description") or meta.get("summary") or "").strip(),
             "tags": parse_tags(meta.get("tags", "")),
@@ -882,7 +840,6 @@ def main() -> int:
     if not pending:
         print("英文译文已是最新，无需翻译。")
         count = build_en_manifest()
-        refresh_all_links()
         print(f"已刷新 {EN_MANIFEST}：{count} 篇英文笔记。")
         return 0
 
@@ -913,7 +870,6 @@ def main() -> int:
             return 1
 
     count = build_en_manifest()
-    refresh_all_links()
     print(f"已刷新 {EN_MANIFEST}：{count} 篇英文笔记。")
     return 0
 

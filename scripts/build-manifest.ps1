@@ -27,7 +27,7 @@
 param(
     [string]$Root = '',
     [string]$Output = 'manifest.json',
-    [string[]]$ExcludeDirs = @('assets', 'scripts', 'node_modules', '.github', '_site', '.jekyll-cache'),
+    [string[]]$ExcludeDirs = @('en', 'assets', 'scripts', 'node_modules', '.github', '_site', '.jekyll-cache'),
     [string[]]$ExcludeFiles = @('README.md', 'README.en.md', 'USAGE.md', 'AGENTS.md'),
     [switch]$NoGit
 )

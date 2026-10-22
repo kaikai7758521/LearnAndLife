@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-10-22T19:58:34+00:00",
+  "generatedAt": "2026-10-23T04:04:43+08:00",
   "count": 5,
   "files": [
     {
       "path": "前端/JavaScript/01-变量与类型.md",
-      "pathEn": "前端/JavaScript/01-变量与类型.en.md",
+      "pathEn": "en/前端/JavaScript/01-变量与类型.md",
       "title": "Variables and Types",
       "description": "",
       "tags": [
@@ -14,7 +14,7 @@
     },
     {
       "path": "前端/JavaScript/02-异步与事件循环.md",
-      "pathEn": "前端/JavaScript/02-异步与事件循环.en.md",
+      "pathEn": "en/前端/JavaScript/02-异步与事件循环.md",
       "title": "Asynchronous JavaScript and the Event Loop",
       "description": "",
       "tags": [
@@ -25,7 +25,7 @@
     },
     {
       "path": "日常生活/运动/01-篮球.md",
-      "pathEn": "日常生活/运动/01-篮球.en.md",
+      "pathEn": "en/日常生活/运动/01-篮球.md",
       "title": "Basketball",
       "description": "",
       "tags": [
@@ -35,7 +35,7 @@
     },
     {
       "path": "日常生活/运动/02-羽毛球.md",
-      "pathEn": "日常生活/运动/02-羽毛球.en.md",
+      "pathEn": "en/日常生活/运动/02-羽毛球.md",
       "title": "Badminton",
       "description": "",
       "tags": [
@@ -45,7 +45,7 @@
     },
     {
       "path": "计算机基础/数据结构/01-数组与链表.md",
-      "pathEn": "计算机基础/数据结构/01-数组与链表.en.md",
+      "pathEn": "en/计算机基础/数据结构/01-数组与链表.md",
       "title": "Arrays and Linked Lists",
       "description": "",
       "tags": [

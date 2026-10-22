@@ -29,10 +29,10 @@ window.SITE_CONFIG = {
 
   // 首页展示的 Markdown 文件（仓库根目录下）
   home: 'README.md',
-  homeEn: 'README.en.md',
+  homeEn: 'en/README.md',
 
   // 生成目录索引时需要忽略的目录（仓库根目录相对路径）
-  excludeDirs: ['assets', 'scripts', 'node_modules', '.github', '_site', '.jekyll-cache'],
+  excludeDirs: ['en', 'assets', 'scripts', 'node_modules', '.github', '_site', '.jekyll-cache'],
   // 生成目录索引时需要忽略的文件（仓库相对路径）
   excludeFiles: ['README.md', 'README.en.md', 'USAGE.md', 'AGENTS.md'],
 

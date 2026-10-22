@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-扫描仓库中的 Markdown 笔记，重新生成 manifest.json、README.md 与 README.en.md。
+扫描仓库中的 Markdown 笔记，重新生成 manifest.json、README.md 与 en/README.md。
 
 用法（在仓库根目录执行）：
     python3 scripts/update-readme.py
@@ -9,7 +9,7 @@
     python3 scripts/update-readme.py --no-manifest
     python3 scripts/update-readme.py --base-url https://example.github.io/repo/
 
-README.md 与 README.en.md 中被下面两行注释包住的内容会被整体替换：
+README.md 与 en/README.md 中被下面两行注释包住的内容会被整体替换：
     <!-- NOTES:START -->
     <!-- NOTES:END -->
 
@@ -17,13 +17,13 @@ README.md 与 README.en.md 中被下面两行注释包住的内容会被整体�
     - 标题依次取 front matter 的 title → 第一个 # 标题 → 文件名；
     - 小标题取 H2–H4，锚点使用页面同款 slugify 规则。
 生成结果是一份目录：笔记标题链接到页面，H2–H4 作为嵌套链接指向对应章节。
-英文目录来自 `<笔记>.en.md`（由 scripts/translate-notes.py 生成）。
+英文目录来自 `en/<笔记>.md`（由 scripts/translate-notes.py 生成），与中文目录结构一一对应。
 
 manifest.json 的字段与 scripts/build-manifest.ps1 保持一致：
     - title / date / lastModified / icon / tags / size；
     - 日期优先沿用旧 manifest，lastModified 优先取 Git 最后一次提交；
-    - 自动跳过 *.en.md 与 README / USAGE 等非笔记文件。
-manifest.en.json 由 *.en.md 的 front matter 生成，结构与 translate-notes.py 一致。
+    - 自动跳过 en/ 目录与 README / USAGE 等非笔记文件。
+manifest.en.json 由 en/ 下英文译文的 front matter 生成，结构与 translate-notes.py 一致。
 """
 
 from __future__ import annotations
@@ -40,17 +40,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 README = ROOT / "README.md"
-README_EN = ROOT / "README.en.md"
+README_EN = ROOT / "en" / "README.md"
 MANIFEST = ROOT / "manifest.json"
 MANIFEST_EN = ROOT / "manifest.en.json"
 CONFIG_JS = ROOT / "assets" / "js" / "config.js"
 
 START_MARK = "<!-- NOTES:START -->"
 END_MARK = "<!-- NOTES:END -->"
+EN_DIR = "en"
 EN_SUFFIX = ".en.md"
 
 # 与 assets/js/config.js 中的 excludeDirs / excludeFiles 保持一致
-EXCLUDE_DIRS = {"assets", "scripts", "node_modules", ".github", "_site", ".jekyll-cache"}
+EXCLUDE_DIRS = {"en", "assets", "scripts", "node_modules", ".github", "_site", ".jekyll-cache"}
 EXCLUDE_FILES = {"README.md", "README.en.md", "USAGE.md", "AGENTS.md"}
 
 # 英文目录中展示的文件夹名称（未列出的目录保留原名）
@@ -221,16 +222,22 @@ def detect_base_url(override: str) -> str:
 
 def collect_notes(base_url: str, lang: str = "zh") -> list[dict[str, object]]:
     notes: list[dict[str, object]] = []
-    pattern = "*.en.md" if lang == "en" else "*.md"
+    folder = ROOT / EN_DIR if lang == "en" else ROOT
+    pattern = "*.md"
+    files = sorted(folder.rglob(pattern), key=lambda p: p.relative_to(ROOT).as_posix())
 
-    for file_path in ROOT.rglob(pattern):
-        rel = file_path.relative_to(ROOT).as_posix()
+    for file_path in files:
+        rel_full = file_path.relative_to(ROOT).as_posix()
+        rel = rel_full[len(EN_DIR) + 1:] if lang == "en" else rel_full
+        parts = rel.split("/")
+
         if lang == "zh" and rel.lower().endswith(EN_SUFFIX):
             continue
-        parts = rel.split("/")
         if any(part.startswith(".") for part in parts):
             continue
-        if rel in EXCLUDE_FILES or parts[0] in EXCLUDE_DIRS:
+        if rel in EXCLUDE_FILES:
+            continue
+        if parts[0] in EXCLUDE_DIRS:
             continue
 
         text = file_path.read_text(encoding="utf-8-sig")
@@ -260,11 +267,11 @@ def collect_notes(base_url: str, lang: str = "zh") -> list[dict[str, object]]:
                 outline.append((level, text_value, slug))
 
         notes.append({
-            "path": rel,
+            "path": rel_full if lang == "en" else rel,
             "dir": "/".join(parts[:-1]),
             "title": title,
             "outline": outline,
-            "url": note_url(base_url, rel),
+            "url": note_url(base_url, rel_full if lang == "en" else rel),
             "lang": lang,
         })
 
@@ -440,19 +447,20 @@ def build_manifest_data() -> dict[str, object]:
 
 
 def build_en_manifest_data() -> dict[str, object]:
-    """扫描英文译文生成 manifest.en.json，字段与 translate-notes.py 保持一致。"""
+    """扫描 en/ 目录生成 manifest.en.json，字段与 translate-notes.py 保持一致。"""
     files: list[dict[str, object]] = []
 
-    for target in ROOT.rglob("*" + EN_SUFFIX):
-        rel = target.relative_to(ROOT).as_posix()
+    for target in (ROOT / EN_DIR).rglob("*.md"):
+        rel_en = target.relative_to(ROOT).as_posix()
+        rel = rel_en[len(EN_DIR) + 1:]
         parts = rel.split("/")
         if any(part.startswith(".") for part in parts):
             continue
-        if rel in EXCLUDE_FILES or parts[0] in EXCLUDE_DIRS:
+        if rel in EXCLUDE_FILES:
             continue
-
-        zh_rel = rel[:-len(EN_SUFFIX)] + ".md"
-        if not (ROOT / zh_rel).is_file():
+        if parts[0] in EXCLUDE_DIRS:
+            continue
+        if not (ROOT / rel).is_file():
             continue
 
         meta, body = split_front_matter(target.read_text(encoding="utf-8-sig"))
@@ -461,11 +469,11 @@ def build_en_manifest_data() -> dict[str, object]:
         if not title:
             title = next((value for level, value in headings if level == 1), "")
         if not title:
-            title = display_name(Path(zh_rel).name)
+            title = display_name(Path(rel).name)
 
         files.append({
-            "path": zh_rel,
-            "pathEn": rel,
+            "path": rel,
+            "pathEn": rel_en,
             "title": title,
             "description": (meta.get("description") or meta.get("summary") or "").strip(),
             "tags": parse_tag_list(meta.get("tags", "")),
@@ -567,7 +575,7 @@ def main() -> int:
             messages.append("manifest.en.json 需要更新。" if changed_manifest_en else "manifest.en.json 已是最新。")
         messages.append("README.md 需要更新。" if changed else "README.md 已是最新。")
         if en_notes:
-            messages.append("README.en.md 需要更新。" if changed_en else "README.en.md 已是最新。")
+            messages.append("en/README.md 需要更新。" if changed_en else "en/README.md 已是最新。")
         print("\n".join(messages))
         return 1 if changed or changed_en or changed_manifest or changed_manifest_en else 0
 
@@ -592,10 +600,11 @@ def main() -> int:
 
     if en_notes:
         if changed_en:
+            README_EN.parent.mkdir(parents=True, exist_ok=True)
             README_EN.write_text(updated_en, encoding="utf-8")
-            print(f"已更新 README.en.md：{len(en_notes)} 篇英文笔记。")
+            print(f"已更新 en/README.md：{len(en_notes)} 篇英文笔记。")
         else:
-            print(f"README.en.md 已是最新：{len(en_notes)} 篇英文笔记。")
+            print(f"en/README.md 已是最新：{len(en_notes)} 篇英文笔记。")
     return 0
 
 

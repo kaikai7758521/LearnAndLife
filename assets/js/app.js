@@ -21,9 +21,9 @@
     repo: '',
     branch: 'main',
     home: 'README.md',
-    homeEn: 'README.en.md',
-    excludeDirs: ['assets', 'scripts', 'node_modules', '.github', '_site', '.jekyll-cache'],
-    excludeFiles: ['README.md', 'README.en.md', 'USAGE.md'],
+    homeEn: 'en/README.md',
+    excludeDirs: ['en', 'assets', 'scripts', 'node_modules', '.github', '_site', '.jekyll-cache'],
+    excludeFiles: ['README.md', 'README.en.md', 'USAGE.md', 'AGENTS.md'],
     showLastModified: true,
     liveLastModified: true
   };
@@ -408,6 +408,10 @@
     if (opts.render === false) return;
 
     if (state.current) {
+      var nextHash = toHash(state.current);
+      if (location.hash !== nextHash) {
+        try { history.replaceState(null, '', nextHash); } catch (e) { /* 忽略 file:// 限制 */ }
+      }
       loadNote(state.current, '', { keepScroll: true });
     } else {
       renderHome('', { keepScroll: true });
@@ -605,7 +609,10 @@
   }
 
   function englishPathFor(path) {
-    return /\.en\.md$/i.test(path) ? path : String(path).replace(/\.md$/i, '.en.md');
+    var value = String(path || '');
+    if (/^en\//i.test(value)) return value;
+    if (/\.en\.md$/i.test(value)) return value;
+    return 'en/' + value;
   }
 
   function noteFetchPath(path) {
@@ -613,6 +620,10 @@
   }
 
   function splitLangPath(path) {
+    if (/^en\//i.test(path)) {
+      var rest = path.replace(/^en\//i, '');
+      if (/\.md$/i.test(rest)) return { path: rest, lang: 'en' };
+    }
     if (/\.en\.md$/i.test(path)) {
       return { path: path.replace(/\.en\.md$/i, '.md'), lang: 'en' };
     }
@@ -885,7 +896,9 @@
 
   /* --------------------------------------------------------------- 路由 */
   function toHash(path, anchor) {
-    var base = '#/' + encodePath(path || '');
+    var value = String(path || '');
+    if (state.lang === 'en' && value && /\.md$/i.test(value)) value = englishPathFor(value);
+    var base = '#/' + encodePath(value);
     if (anchor) base += '@' + encodeURIComponent(anchor);
     return base;
   }
