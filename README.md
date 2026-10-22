@@ -5,14 +5,6 @@
 <!-- NOTES:START -->
 <!-- 本区域由 scripts/update-readme.py 自动生成，请勿手动修改 -->
 
-## 根目录
-
-- [AGENTS.md](https://kaikai7758521.github.io/LearnAndLife/#/AGENTS.md)
-  - [Project](https://kaikai7758521.github.io/LearnAndLife/#/AGENTS.md@project)
-  - [Layout](https://kaikai7758521.github.io/LearnAndLife/#/AGENTS.md@layout)
-  - [Commands](https://kaikai7758521.github.io/LearnAndLife/#/AGENTS.md@commands)
-  - [Conventions and gotchas](https://kaikai7758521.github.io/LearnAndLife/#/AGENTS.md@conventions-and-gotchas)
-
 ## 前端 / JavaScript
 
 - [变量与类型](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/01-变量与类型.md)
