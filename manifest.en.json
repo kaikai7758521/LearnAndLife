@@ -1,28 +1,7 @@
 {
-  "generatedAt": "2026-10-22T20:09:31+00:00",
+  "generatedAt": "2026-10-23T19:18:38+00:00",
   "count": 5,
   "files": [
-    {
-      "path": "前端/JavaScript/01-变量与类型.md",
-      "pathEn": "en/前端/JavaScript/01-变量与类型.md",
-      "title": "Variables and Types",
-      "description": "",
-      "tags": [
-        "JavaScript",
-        "Basics"
-      ]
-    },
-    {
-      "path": "前端/JavaScript/02-异步与事件循环.md",
-      "pathEn": "en/前端/JavaScript/02-异步与事件循环.md",
-      "title": "Asynchronous JavaScript and the Event Loop",
-      "description": "",
-      "tags": [
-        "JavaScript",
-        "Async",
-        "Event Loop"
-      ]
-    },
     {
       "path": "日常生活/运动/01-篮球.md",
       "pathEn": "en/日常生活/运动/01-篮球.md",
@@ -41,6 +20,27 @@
       "tags": [
         "badminton",
         "sports"
+      ]
+    },
+    {
+      "path": "计算机基础/JavaScript/01-变量与类型.md",
+      "pathEn": "en/计算机基础/JavaScript/01-变量与类型.md",
+      "title": "Variables and Types",
+      "description": "",
+      "tags": [
+        "JavaScript",
+        "Basics"
+      ]
+    },
+    {
+      "path": "计算机基础/JavaScript/02-异步与事件循环.md",
+      "pathEn": "en/计算机基础/JavaScript/02-异步与事件循环.md",
+      "title": "Asynchronous JavaScript and the Event Loop",
+      "description": "",
+      "tags": [
+        "JavaScript",
+        "Async",
+        "Event Loop"
       ]
     },
     {

@@ -5,26 +5,26 @@
 <!-- NOTES:START -->
 <!-- 本区域由 scripts/update-readme.py 自动生成，请勿手动修改 -->
 
-## 前端 / JavaScript
-
-- [变量与类型](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/01-变量与类型.md)
-  - [三种声明方式](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/01-变量与类型.md@三种声明方式)
-    - [暂时性死区（TDZ）](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/01-变量与类型.md@暂时性死区tdz)
-  - [原始类型与引用类型](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/01-变量与类型.md@原始类型与引用类型)
-    - [值传递的差异](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/01-变量与类型.md@值传递的差异)
-  - [类型转换的坑](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/01-变量与类型.md@类型转换的坑)
-  - [相关笔记](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/01-变量与类型.md@相关笔记)
-- [异步与事件循环](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/02-异步与事件循环.md)
-  - [一张图看懂执行顺序](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/02-异步与事件循环.md@一张图看懂执行顺序)
-  - [经典面试题](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/02-异步与事件循环.md@经典面试题)
-  - [async / await 的本质](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/02-异步与事件循环.md@async-await-的本质)
-  - [定时器并不精确](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/02-异步与事件循环.md@定时器并不精确)
-  - [相关笔记](https://kaikai7758521.github.io/LearnAndLife/#/前端/JavaScript/02-异步与事件循环.md@相关笔记)
-
 ## 日常生活 / 运动
 
 - [篮球](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/运动/01-篮球.md)
 - [羽毛球](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/运动/02-羽毛球.md)
+
+## 计算机基础 / JavaScript
+
+- [变量与类型](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/01-变量与类型.md)
+  - [三种声明方式](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/01-变量与类型.md@三种声明方式)
+    - [暂时性死区（TDZ）](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/01-变量与类型.md@暂时性死区tdz)
+  - [原始类型与引用类型](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/01-变量与类型.md@原始类型与引用类型)
+    - [值传递的差异](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/01-变量与类型.md@值传递的差异)
+  - [类型转换的坑](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/01-变量与类型.md@类型转换的坑)
+  - [相关笔记](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/01-变量与类型.md@相关笔记)
+- [异步与事件循环](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/02-异步与事件循环.md)
+  - [一张图看懂执行顺序](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/02-异步与事件循环.md@一张图看懂执行顺序)
+  - [经典面试题](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/02-异步与事件循环.md@经典面试题)
+  - [async / await 的本质](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/02-异步与事件循环.md@async-await-的本质)
+  - [定时器并不精确](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/02-异步与事件循环.md@定时器并不精确)
+  - [相关笔记](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/02-异步与事件循环.md@相关笔记)
 
 ## 计算机基础 / 数据结构
 
