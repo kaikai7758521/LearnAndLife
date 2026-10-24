@@ -7,7 +7,7 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 
 ## AI时代技术 / 基础概念
 
-- [AI Agent core terminology inventory notes (principle + layering + list of common agents)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/01-AI常见概念盘点.md)
+- [AI common concepts inventory](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/01-AI常见概念盘点.md)
   - [1. Core terms and principle details](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/01-AI常见概念盘点.md@1-core-terms-and-principle-details)
     - [1. Agent](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/01-AI常见概念盘点.md@1-agent)
     - [2. Tool](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/01-AI常见概念盘点.md@2-tool)
@@ -26,7 +26,7 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
     - [\[Project Implementation: Mainstream Agent in the LLM Era\]](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/01-AI常见概念盘点.md@project-implementation-mainstream-agent-in-the-llm-era)
   - [3. Level comparison](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/01-AI常见概念盘点.md@3-level-comparison)
   - [4. Common misunderstandings](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/01-AI常见概念盘点.md@4-common-misunderstandings)
-- [RAG](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/02-RAG技术及其原理.md)
+- [RAG technology and its principles](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/02-RAG技术及其原理.md)
   - [1. Basic definitions and principles](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/02-RAG技术及其原理.md@1-basic-definitions-and-principles)
     - [Ordinary LLM (native large language model)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/02-RAG技术及其原理.md@ordinary-llm-native-large-language-model)
     - [RAG (Retrieval-Augmented Generation, retrieval enhanced generation)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/02-RAG技术及其原理.md@rag-retrieval-augmented-generation-retrieval-enhanced-generation)
@@ -63,7 +63,7 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
     - [1. Input Token (prompttokens, Prefill stage)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@1-input-token-prompttokens-prefill-stage)
     - [2. Output Token (completiontokens, Decode stage)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@2-output-token-completiontokens-decode-stage)
   - [3. Typical Token high consumption scenarios](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@3-typical-token-high-consumption-scenarios)
-    - [Scenario 1: Agent/Function Calling tool calling loop](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@scenario-1-agentfunction-calling-tool-calling-loop)
+    - [Scenario 1: Agent/Function Calling Tool Calling Loop](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@scenario-1-agentfunction-calling-tool-calling-loop)
     - [Scenario 2: RAG retrieves extremely long document fragments](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@scenario-2-rag-retrieves-extremely-long-document-fragments)
     - [Scenario 3: thinking token of inference model](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@scenario-3-thinking-token-of-inference-model)
     - [Scenario 4: Context Cache (Prompt Cache) mechanism, changing billing rules](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@scenario-4-context-cache-prompt-cache-mechanism-changing-billing-rules)
@@ -73,7 +73,7 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 
 ## AI时代技术 / 技术实践
 
-- [Uses OpenCode + DeepSeek API to build a novel writing agent](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/01-建立自己的Agent.md)
+- [Build your own Agent](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/01-建立自己的Agent.md)
   - [Pre-understanding (principle)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/01-建立自己的Agent.md@pre-understanding-principle)
   - [Pre-preparation (one-time use)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/01-建立自己的Agent.md@pre-preparation-one-time-use)
     - [1. Prepare DeepSeek API Key](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/01-建立自己的Agent.md@1-prepare-deepseek-api-key)
@@ -92,7 +92,7 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
     - [5. Terminate the loop to prevent infinite API calls](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/01-建立自己的Agent.md@5-terminate-the-loop-to-prevent-infinite-api-calls)
   - [Verification route](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/01-建立自己的Agent.md@verification-route)
   - [Optional advanced gameplay](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/01-建立自己的Agent.md@optional-advanced-gameplay)
-- [Self-built RAG system](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md)
+- [Build your own RAG](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md)
   - [Pre-cognition](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md@pre-cognition)
   - [Step 1: Prepare original document & document loading](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md@step-1-prepare-original-document-document-loading)
   - [Step 2: Text Segmentation Chunking (the most likely part of RAG to overturn)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md@step-2-text-segmentation-chunking-the-most-likely-part-of-rag-to-overturn)
@@ -100,8 +100,8 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
   - [Step 4: Write to vector database and create index](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md@step-4-write-to-vector-database-and-create-index)
   - [Step 5: User Query Preprocessing](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md@step-5-user-query-preprocessing)
   - [Step 6: Retrieval Retrieval](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md@step-6-retrieval-retrieval)
-  - [Step 7: (optional, generally omitted in Demo) Rerank](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md@step-7-optional-generally-omitted-in-demo-rerank)
-  - [Step 8: Prompt assembly (package the question + retrieval fragment and feed it to LLM)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md@step-8-prompt-assembly-package-the-question-retrieval-fragment-and-feed-it-to-llm)
+  - [Step 7: Rerank](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md@step-7-rerank)
+  - [Step 8: Prompt Assembly](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md@step-8-prompt-assembly)
   - [Step 9: LLM generates the answer and returns the result + source](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md@step-9-llm-generates-the-answer-and-returns-the-result-source)
 
 ## Daily Life / Sports

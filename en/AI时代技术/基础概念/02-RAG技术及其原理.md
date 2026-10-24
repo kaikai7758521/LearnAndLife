@@ -1,11 +1,11 @@
 ---
-title: "RAG"
+title: "RAG technology and its principles"
 lang: en
-translatedFrom: 92fd95e365ac57d6708c501329235fbb41a9546fa743496f3d6f38fce25e8a71
+translatedFrom: fa1c851598c9c41c3be92609c94aba651e39a35f03ccda6d0a97e166f09e3495
 translatedAt: 2026-10-24
 ---
 
-# RAG
+# RAG technology and its principles
 The key point of the sentence before > : **RAG is not an independent large model, it is a set of "retrieval + LLM" application architecture; LLM is the brain responsible for generation, and RAG plugs into this brain a knowledge base** that can be updated at any time.
 > can be linked with the previous Agent note: RAG is often encapsulated into a Skill of Agent.
 
@@ -13,7 +13,7 @@ The key point of the sentence before > : **RAG is not an independent large model
 ### Ordinary LLM (native large language model)
 **defines**: a generative model that has undergone massive text pre-training and weight solidification. All knowledge is encoded in the model parameters (weights). This part of knowledge is also called **parameterized knowledge (Parametric Memory)**.
 **Workflow**
-The user asks a question → the model reads the conversation history within the context window → relies on the parameter knowledge learned during the training phase and autoregressively outputs the answer.
+The user asks a question → the model reads the conversation history in the context window → relies on the parameter knowledge learned during the training phase and autoregressively outputs the answer.
 - It doesn't know about "external documents"; it only knows about the text distribution it saw during training.
 - knowledge is frozen at the **training deadline**. It has no natural knowledge of new things that happen after the deadline and your private documents.
 - 's answer is generated probabilistically, with priority given to ensuring fluency, but not necessarily correct facts. This is the source of the illusion.

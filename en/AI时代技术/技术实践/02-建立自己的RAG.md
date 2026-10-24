@@ -1,11 +1,11 @@
 ---
-title: "Self-built RAG system"
+title: "Build your own RAG"
 lang: en
-translatedFrom: 24acd896728fb81529d88feb50802ba82f024769eef0a88de54ab1012174f2ee
+translatedFrom: 3ca2c878fbad954ce14874bc7eec831c84084a2fb3cb0c6b253e9f72f6056f73
 translatedAt: 2026-10-24
 ---
 
-# Self-built RAG system
+# Build your own RAG
 The overall idea of > : **first builds the index offline, and then does Q&A online; Demo gives priority to the smallest available, and then gradually adds the optimization component**
 
 ## Pre-cognition
@@ -47,7 +47,7 @@ Parameters: `chunk_size` block size, `chunk_overlap` overlap length
     - Demo experience value: about 500~1000 tokens in English; 300~600 words recommended in Chinese
 2. overlap (overlap) is very critical: avoid a sentence or a knowledge point being cut in the middle of two pieces, and the context is broken; generally set to 10%~20% of chunk_size;
 3. fixed segmentation shortcomings: it will cut off the title from the text and paragraphs; this is also the inherent shortcoming of Naive RAG; Advanced RAG will be replaced by semantic segmentation and segmentation by title;
-4. gives priority to recursive cutting according to newlines, periods, and semicolons, rather than rough cutting by characters (advantage of recursive splitter).
+4. gives priority to recursive segmentation by line breaks, periods, and semicolons, rather than rough and hard segmentation by characters (advantages of recursive segmentation).
 
 ## Step 3: Embedding Vectorization
 ✅ Goal: text chunk → dense vector, text vectors with similar semantics are closer
@@ -76,11 +76,11 @@ Do not use the English embedding model for 3. Chinese, as the representation eff
 3. Do not store duplicate chunks: simply remove duplicate chunks before warehousing to avoid repeated recalls;
 4. metadata is stored together: file name, page number, and the source can be output later in the answer.
 
-> ✅ Here, the offline phase of **ends**. The document has been turned into a vector index, and there is no need to repeat it in the future (new documents need to be incrementally stored in the database)
+> ✅ Here, the offline phase of **ends**. The document has been turned into a vector index, and there is no need to run it again in the future (only new documents need to be added to the database incrementally)
 
 ---
 
-# Online question and answer stage (the link for users to ask questions will be run again every time they ask questions)
+# Online question and answer stage
 ## Step 5: User Query Preprocessing
 ✅ Goal: Process the user’s original question into a query suitable for retrieval
 ✅ Principle: User questions are colloquial, short, and ambiguous; simple RAG is directly retrieved; advanced RAG is rewritten, expanded, and HyDEed here.
@@ -88,7 +88,7 @@ Do not use the English embedding model for 3. Chinese, as the representation eff
 ✅ Notes & Details
 1. cleans up redundant symbols, expressions, and irrelevant chatter;
 2. multi-round dialogue scenario: historical dialogue summaries must be merged into the query, otherwise the retrieval will lack context when the user asks (Demo can be done in a single round first to simplify);
-3. Pitfalls: The questions are very short (such as "Process?") with ambiguous semantics, and vector recall can easily go off track. This is a classic shortcoming of Naive RAG.
+Pitfalls of 3. : The question is very short (such as "Process?") with ambiguous semantics, and vector recall can easily go off track. This is a classic shortcoming of Naive RAG.
 
 ## Step 6: Retrieval Retrieval
 ✅ Goal: Use query vector to find the Top-K most similar chunks in the vector library
@@ -99,12 +99,12 @@ Do not use the English embedding model for 3. Chinese, as the representation eff
 2. similarity ≠ correlation! The vectors are only semantically similar and do not mean that the content can answer the question (this is why Rerank is added later);
 3. Naive RAG only has dense vector retrieval here; Advanced adds BM25 keyword retrieval and multi-path recall here.
 
-## Step 7: (optional, generally omitted in Demo) Rerank
+## Step 7: Rerank
 > Naive Demo can be skipped, this step belongs to the Advanced RAG optimization item
 ✅ Principle: The recalled candidate chunks are handed over to the Rerank cross encoder, and `query + chunk` is input for pairwise scoring, reordering, and filtering of low-scoring irrelevant fragments; the Rerank model has a much stronger ability to distinguish correlations than embedding.
 ✅ Note: Rearrangement will increase delay and additional calling costs; add them after the demo is run through.
 
-## Step 8: Prompt assembly (package the question + retrieval fragment and feed it to LLM)
+## Step 8: Prompt Assembly
 ✅ Goal: Construct constraint Prompt and tell LLM**that it can only answer based on the given reference materials and cannot make up**
 ✅ Principle: LLM itself does not know external documents. We insert the evidence fragments into the context window and add instruction constraints to achieve grounding.
 ✅ Demo reference Prompt template
@@ -117,7 +117,7 @@ Do not use the English embedding model for 3. Chinese, as the representation eff
 用户问题：{user_query}
 ```
 ✅ Notes & Details
-1. context window upper limit! The total tokens of all chunk+prompt+questions cannot exceed the LLM maximum window; If you recall too much, it will be truncated, and truncation will lose evidence;
+1. context window upper limit! The total tokens of all chunk+prompt+questions cannot exceed the maximum LLM window; if there are too many recalls, they will be truncated, and truncation will cause evidence to be lost;
 The 2. constraint word must be written, otherwise LLM will ignore the material and use its own parameter knowledge to make up random things (illusion);
 Add a separator (---) between 3. chunk to facilitate LLM to distinguish different fragments;
 4. Don’t fill in dozens of pieces of material at once, as LLM can easily ignore some of them.
@@ -128,11 +128,11 @@ Add a separator (---) between 3. chunk to facilitate LLM to distinguish differen
 ✅ Notes & Details
 1. will still hallucinate even if restraints are added! RAG cannot completely eliminate hallucinations;
 2. brings metadata (document name, page number) when output for easy verification;
-3. can add post-checking: let LLm self-check whether the answer conflicts with the reference material (advanced gameplay, not used in Demo).
+3. can add post-checking: let LLm self-check whether the answer conflicts with the reference material.
 
 ---
 
-Recommended # Simplest Demo technology stack (can be written right out of the box)
+# Simplest Demo technology stack recommendation
 Python + LangChain + Chroma + BGE Embedding + any LLM
 ```
 # 极简依赖
@@ -144,7 +144,7 @@ openai / dashscope
 ```
 > Don’t want to deploy local models: directly use LLM online API, Demo development is the fastest.
 
-# Demo development sequence suggestions (pitfall avoidance route)
+# Demo development sequence suggestions
 1. first writes the document loading + text segmentation, prints out the chunk, and checks the segmentation effect with the naked eye (many people jump directly to vector storage, but later find that the chunk segmentation is a mess)
 2. tests Embedding alone: input two pieces of text, print the vector, and test whether the similarity is as expected
 3. independently tests vector library retrieval: manually write several queries to see if the recalled chunks are correct; **retrieval link is adjusted separately, and then connected to LLM**
@@ -153,7 +153,7 @@ openai / dashscope
 5. Plus evaluation: Take test questions with known answers and see if the recall and answers are correct
 6. iterative upgrade: add Rerank, BM25 hybrid search, upgrade Advanced RAG
 
-# High Frequency Pit Cheat Sheet (useful for interviews and practical operations)
+# High frequency pit
 1. Embedding model is inconsistent: document uses A, query uses B → recall is completely messed up
 2. Chunk is cut too large/too small and has no overlap → the information is broken and the recall is invalid
 3. noise is not cleaned (header and footer watermark) → a large number of invalid chunks are stored in the database

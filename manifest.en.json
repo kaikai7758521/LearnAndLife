@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-10-24T15:28:46+00:00",
+  "generatedAt": "2026-10-24T15:32:52+00:00",
   "count": 15,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
       "pathEn": "en/AI时代技术/基础概念/01-AI常见概念盘点.md",
-      "title": "AI Agent core terminology inventory notes (principle + layering + list of common agents)",
+      "title": "AI common concepts inventory",
       "description": "",
       "tags": []
     },
     {
       "path": "AI时代技术/基础概念/02-RAG技术及其原理.md",
       "pathEn": "en/AI时代技术/基础概念/02-RAG技术及其原理.md",
-      "title": "RAG",
+      "title": "RAG technology and its principles",
       "description": "",
       "tags": []
     },
@@ -33,14 +33,14 @@
     {
       "path": "AI时代技术/技术实践/01-建立自己的Agent.md",
       "pathEn": "en/AI时代技术/技术实践/01-建立自己的Agent.md",
-      "title": "Uses OpenCode + DeepSeek API to build a novel writing agent",
+      "title": "Build your own Agent",
       "description": "",
       "tags": []
     },
     {
       "path": "AI时代技术/技术实践/02-建立自己的RAG.md",
       "pathEn": "en/AI时代技术/技术实践/02-建立自己的RAG.md",
-      "title": "Self-built RAG system",
+      "title": "Build your own RAG",
       "description": "",
       "tags": []
     },
