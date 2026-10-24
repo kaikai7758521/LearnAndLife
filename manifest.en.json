@@ -1,7 +1,14 @@
 {
-  "generatedAt": "2026-10-24T10:04:47+00:00",
-  "count": 9,
+  "generatedAt": "2026-10-24T10:16:16+00:00",
+  "count": 10,
   "files": [
+    {
+      "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
+      "pathEn": "en/AI时代技术/基础概念/01-AI常见概念盘点.md",
+      "title": "AI Agent core terminology inventory notes (principle + layering + list of common agents)",
+      "description": "",
+      "tags": []
+    },
     {
       "path": "日常生活/运动/01-篮球.md",
       "pathEn": "en/日常生活/运动/01-篮球.md",

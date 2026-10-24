@@ -5,6 +5,28 @@
 <!-- NOTES:START -->
 <!-- 本区域由 scripts/update-readme.py 自动生成，请勿手动修改 -->
 
+## AI时代技术 / 基础概念
+
+- [AI Agent 核心名词盘点笔记（原理+分层+常见Agent一览）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md)
+  - [一、核心名词与原理细节](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@一核心名词与原理细节)
+    - [1. Agent（智能体）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@1-agent智能体)
+    - [2. Tool（工具）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@2-tool工具)
+    - [3. Skill（技能）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@3-skill技能)
+    - [4. Harness（Agent Harness，智能体运行基座/脚手架）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@4-harnessagent-harness智能体运行基座脚手架)
+    - [5. LSP（Language Server Protocol，语言服务器协议）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@5-lsplanguage-server-protocol语言服务器协议)
+    - [配套高频名词补充](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@配套高频名词补充)
+      - [ReAct](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@react)
+      - [RAG（检索增强生成）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@rag检索增强生成)
+      - [Memory（记忆）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@memory记忆)
+      - [Planner（规划器）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@planner规划器)
+      - [Sub-Agent / Multi-Agent（多智能体）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@sub-agent-multi-agent多智能体)
+      - [Guardrail（安全护栏）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@guardrail安全护栏)
+  - [二、常见Agent分类及其特点](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@二常见agent分类及其特点)
+    - [【经典AI理论5类（教科书分类）】](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@经典ai理论5类教科书分类)
+    - [【工程落地：LLM时代主流Agent】](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@工程落地llm时代主流agent)
+  - [三、层级对照](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@三层级对照)
+  - [四、常见误区](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/01-AI常见概念盘点.md@四常见误区)
+
 ## 日常生活 / 运动
 
 - [篮球](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/运动/01-篮球.md)
