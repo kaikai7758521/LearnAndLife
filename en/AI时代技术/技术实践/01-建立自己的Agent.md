@@ -1,14 +1,13 @@
 ---
 title: "Build your own Agent"
 lang: en
-translatedFrom: 6133afc0943f2ef7442d3f963a3d352a08d29030bc54147dfdf73d8a0bcf565d
+translatedFrom: d83d441aae4181d2b934d2eefd6065dd4c31f8cb2984d8ba4d9f04128b7ed384
 translatedAt: 2026-10-24
 ---
 
 # Build your own Agent
----
 
-# Uses OpenCode + DeepSeek API to build a novel writing agent
+**uses OpenCode + DeepSeek API to build novel writing agent**
 > Note: You **do not need to write any Python or LangGraph code**. OpenCode comes with Agent scheduling, tool calling, file reading and writing, and sub-Agent capabilities; all inferences call DeepSeek's official API and do not deploy large models locally; you only need to prepare the DeepSeek API Key and follow the interactive commands to configure it step by step.
 > OpenCode has built-in tools: `read（读取文件）` and `write（写入文件）`, which are suitable for reading novel settings and saving chapters; it supports the creation of sub-Agents. We divide it into [main writing agent] + [critic sub-agent] to realize the closed loop of planning, writing, self-examination, and saving in the previous plan.
 
@@ -16,11 +15,11 @@ translatedAt: 2026-10-24
 ## Pre-understanding (principle)
 The working logic of the entire novel Agent remains the same as the previous version, except that the **scheduling engine is handed over to OpenCode**:
 1. OpenCode is responsible for cycle scheduling, tool calling, permission control, and session memory;
-2. uses the DeepSeek API for all thinking, outlines, text writing, and consistency reviews;
+2. uses DeepSeek API for all thinking, outline, text writing, and consistency review;
 3. novel materials (world view, character cards, chapters) are all placed in local folders and read and written by OpenCode's built-in read/write tool;
 Division of work between 4. two Agents:
-   - Main Novel Agent: Responsible for reading settings, making chapter planning, writing chapter text, and saving drafts;
-   - Critic review sub-agent: specializes in reading chapters, characters, and world views, checking OOC, plot conflicts, and combat breakdown. It only outputs a list of issues and does not directly modify the text.
+   - main novel agent: responsible for reading settings, making chapter planning, writing chapter text, and saving drafts;
+   - Critic review sub-agent: specializes in reading chapters, characters, world view, checking OOC, plot conflicts, and combat power collapse. It only outputs a list of issues and does not directly modify the text.
 
 > important boundaries:
 > ✅ Agent can automatically read all settings and chapters; automatically write new chapters and update character dynamic status;
@@ -32,7 +31,7 @@ Division of work between 4. two Agents:
 2. recharges the balance in advance. The Agent is called in multiple rounds and will consume tokens;
 3. recommended model selection:
    - Write the text: `deepseek-v4-flash`, flexible writing style and high cost performance
-   - Outline planning, review and verification, summary generation: `deepseek-v4-pro`, rigorous logic, suitable for self-inspection
+   - Outline planning, review and verification, abstract generation: `deepseek-v4-pro`, rigorous logic, suitable for self-inspection
 
 ### 2. Install OpenCode (supports Windows/Mac/Linux)
 OpenCode has two types: desktop version and terminal TUI. We recommend **desktop version**, which is more friendly to novices;
@@ -64,7 +63,7 @@ Open OpenCode and enter the command in the bottom input box:
 2. Paste your DeepSeek API Key and press Enter to submit;
 3. selects the default model, here `deepseek-v4-flash` is preferred (the default model for main writing);
 4. prompts that the connection is successful, which means that all OpenCode model requests will be forwarded to the DeepSeek official API, and there are no local models.
-> verification: Enter `/models`, you can switch between the two models v4-pro / v4-flash. Later, we will specify v4-pro separately for the review sub-agent.
+> verification: Enter `/models` to switch between the two models v4-pro / v4-flash. Later, we will separately specify v4-pro for the review sub-agent.
 
 ## Step 2: Interactively create [Main Novel Writing Agent]
 Execute the Create Agent command in the OpenCode input box. The wizard will ask you step by step. Just type the answer:
@@ -91,7 +90,7 @@ opencode agent create
  parameters:
 1. save location: the same project;
 2. Agent name: `critic`;
-3. Agent description (copy directly):
+3. Agent description (direct copy):
 > You are the novel consistency review sub-agent, using deepseek-v4-pro. After getting the chapter text, compare it with the setting.md world view, characters.md character card, chapter_index historical foreshadowing, and check one by one: character OOC, combat power violations, timeline conflicts, foreshadowing conflicts, and secrets leaked in advance; only a structured question list is output, **does not modify the main text**. If there is no problem, return directly to [No obvious conflict].
 4. tool permissions: only check read (read only! Files cannot be written to prevent it from changing the manuscript randomly)
 5. model: specify `deepseek-v4-pro` (stronger logic, suitable for verification)
@@ -107,15 +106,15 @@ opencode agent create
 After the 5. outline is finalized, you can ask the Agent to append the outline to chapter_index.md.
 
 ## Step 5: Standard Writing Process
-> sends text commands, **does not write code**, OpenCode automatically runs the ReAct loop, calls tools, and calls sub-Agents
+> sends text commands, **does not write code,**, OpenCode automatically runs the ReAct loop, calls tools, and calls sub-Agents
 Example of 1. sending writing instructions:
 > writes Chapter 3. The POV is that of the heroine. The core conflict of this chapter: an ambush in a secret realm; please send me a list of this chapter for confirmation.
 2. automatic process (automatically executed internally by OpenCode):
    ① Call read to read setting.md, appearance character card, and historical chapter summary;
    ② Call DeepSeek API to generate the beat list of this chapter (opening, conflict, turning point, foreshadowing);
 3. review tempo:
-   - is satisfied: Reply [beat confirmed, start writing the text]
-   - is not satisfied: directly submit modification suggestions, and the Agent will regenerate the beat.
+   - Satisfied: Reply [beat confirmed, start writing text]
+   - is not satisfied: directly submit modification suggestions, and the agent will regenerate the beat.
 4. beat confirmation, Agent generates the first draft of the chapter;
 5. Agent automatically @critic sub-Agent, initiates consistency review (using v4-pro);
 6. Critic returns to the problem list. If there are OOC or contradictions, the main writer will automatically modify the manuscript (up to 2 rounds of automatic modifications to prevent infinite loops from consuming balances);
@@ -132,10 +131,10 @@ Agent will automatically read the original text and settings of ch03.md, call De
 
 ## Step 7: Operation skills for switching Agents
 - Tab key: quickly switch novel-writer/critic;
-- manually reviews a certain chapter individually and directly sends:
+- manually review a chapter individually and send it directly:
 `@critic 读取 chapters/ch03.md，做一次完整剧情一致性检查`
 
-Important notes for ## 
+Important precautions for ## 
 ### 1. API and fees related
 1. All requests use the DeepSeek API Key, and OpenCode itself does not charge inference fees; you only bear the token consumption of DeepSeek;
 Each chapter of 2. will call the API multiple times: planning → writing → review → modification, which consumes more tokens than ordinary continuation;
@@ -144,12 +143,12 @@ When the 3. network is unstable, the API call will time out. Just resend the com
 
 ### 2. Permission security
 The tool permissions of the two Agents of 1. are strictly configured as above: writers can only read+write, and examiners can only read; **do not open shells and execute command tools** casually;
-2. setting.md and character basic settings can only be read by the Agent: any need to modify these two files, **can only be opened and modified manually in Notepad, and the Agent is not allowed to automatically overwrite**;
+2. setting.md, character basic settings, Agent can only read: any need to modify these two files, **can only be opened and modified manually in Notepad, and the Agent will not automatically overwrite**;
 If 3. Agent finds a setting conflict, it will only list the conflict, and will not privately rewrite the setting to smooth out the conflict, waiting for your decision.
 
 ### 3. Memory and long-form consistency
 OpenCode itself has an upper limit on the session window, so we do not rely on conversation history memory; **all relies on external md files to store settings and summaries**. The file is read every time when writing to solve long-form amnesia and OOC problems.
-> Even if DeepSeek v4 supports millions of contexts, the file digest solution will still be used first, which is more stable and saves money.
+> Even if DeepSeek v4 supports millions of contexts, the file summary solution will still be used first, which is more stable and saves money.
 
 ### 4. How to deal with tool calling errors
 Occasionally, the tool call format returned by DeepSeek is not standardized, and OpenCode will prompt that the call failed. Solution:
@@ -165,9 +164,9 @@ If you find that the Agent has been repeatedly calling tools and consuming balan
 4. test simple instructions: `读取setting.md，把世界观内容复述一遍`, verify that the read tool is normal;
 5. test writing the first chapter, complete: beat confirmation → writing → critic review → save;
 6. finished writing the first chapter, tested the modification feedback process, and verified that the modification and re-examination were normal;
-7. Write 2~3 chapters in a row and observe whether the characters and foreshadowing are consistent.
+7. Write 2 to 3 chapters in a row and observe whether the characters and foreshadowing are consistent.
 
 ## Optional advanced gameplay
 1. adds [Foreshadowing Tracking Sub-Agent]: Create a new sub-Agent to record and retrieve all foreshadowings in the book, and regularly check foreshadowing recovery;
-2. Style lock: You put the sample essay you are satisfied with in style.md, and let the Agent read style.md to align the writing style before each writing;
+2. Writing style lock: You put the sample essay you are satisfied with in style.md, and let the Agent read style.md to align the writing style before each writing;
 3. Multi-line branch story: Create a new branch folder, let the Agent read and write chapter files of different branches, and manage parallel plots.
