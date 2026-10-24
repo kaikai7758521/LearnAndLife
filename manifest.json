@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-24T10:16:16+00:00",
-  "count": 10,
+  "generatedAt": "2026-10-24T15:09:41+00:00",
+  "count": 14,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
@@ -10,6 +10,42 @@
       "icon": "",
       "tags": [],
       "size": 12518
+    },
+    {
+      "path": "AI时代技术/基础概念/02-RAG技术及其原理.md",
+      "title": "RAG",
+      "date": "2026-10-24",
+      "lastModified": "2026-10-24",
+      "icon": "",
+      "tags": [],
+      "size": 6858
+    },
+    {
+      "path": "AI时代技术/基础概念/03-RAG工作流程.md",
+      "title": "RAG 工作流程",
+      "date": "2026-10-24",
+      "lastModified": "2026-10-24",
+      "icon": "",
+      "tags": [],
+      "size": 9453
+    },
+    {
+      "path": "AI时代技术/技术实践/01-建立自己的Agent.md",
+      "title": "用 OpenCode + DeepSeek API 搭建小说写作Agent",
+      "date": "2026-10-24",
+      "lastModified": "2026-10-24",
+      "icon": "",
+      "tags": [],
+      "size": 11107
+    },
+    {
+      "path": "AI时代技术/技术实践/02-建立自己的RAG.md",
+      "title": "02-建立自己的RAG",
+      "date": "2026-10-24",
+      "lastModified": "2026-10-24",
+      "icon": "",
+      "tags": [],
+      "size": 0
     },
     {
       "path": "日常生活/运动/01-篮球.md",
