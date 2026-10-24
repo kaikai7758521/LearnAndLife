@@ -56,7 +56,7 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
     - [Execution process](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/03-RAG工作流程.md@execution-process)
     - [Features](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/03-RAG工作流程.md@features-3)
     - [Typical scenarios](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/03-RAG工作流程.md@typical-scenarios-3)
-- [Untitled](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md)
+- [How is  Token consumed?](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md)
   - [1. What exactly is Token?](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@1-what-exactly-is-token)
     - [Experience conversion (only estimate, cannot be used for billing)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@experience-conversion-only-estimate-cannot-be-used-for-billing)
   - [2. Two types of Token: input Prompt Token & output Completion Token](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@2-two-types-of-token-input-prompt-token-output-completion-token)
