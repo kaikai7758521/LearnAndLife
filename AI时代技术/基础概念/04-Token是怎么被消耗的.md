@@ -1,4 +1,4 @@
-# LLM Token 是怎么消耗的
+# Token 是怎么消耗的
 > 适用人群：开发者、Prompt工程师、做RAG/Agent、需要控制大模型成本的同学
 > 核心：**Token 是大模型计算、计费、上下文窗口限制的最小单元；一次请求分为「输入Token（Prefill）」和「输出Token（Decode）」，二者计算逻辑、算力开销、单价都不一样**
 
