@@ -45,6 +45,29 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
   - [9. Supplement: Comparison of circuit architectures of two types of chips](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/常见基本电路/02-芯片电路.md@9-supplement-comparison-of-circuit-architectures-of-two-types-of-chips)
   - [10. Summarize the hierarchical relationship in one sentence](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/常见基本电路/02-芯片电路.md@10-summarize-the-hierarchical-relationship-in-one-sentence)
 
+## 电子工程 / 电路案例
+
+- [Paddle electric propeller circuit design notes](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md)
+  - [1. Sorting out functional requirements](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@1-sorting-out-functional-requirements)
+  - [2. Overall circuit](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@2-overall-circuit)
+  - [3. Detailed explanation of sub-module circuit](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@3-detailed-explanation-of-sub-module-circuit)
+    - [3.1 wireless remote control module](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@31-wireless-remote-control-module)
+    - [3.2 propulsion motor drive unit (ESC electronic control)](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@32-propulsion-motor-drive-unit-esc-electronic-control)
+    - [3.3 steering servo unit](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@33-steering-servo-unit)
+    - [3.4 power supply and BEC step-down unit (focus, battery solution)](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@34-power-supply-and-bec-step-down-unit-focus-battery-solution)
+      - [Plan A: 3S lithium battery (11.1V, fully charged 12.6V)](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@plan-a-3s-lithium-battery-111v-fully-charged-126v)
+      - [Plan B: 4S lithium battery (14.8V, fully charged 16.8V)](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@plan-b-4s-lithium-battery-148v-fully-charged-168v)
+      - [Solution C: 12V lead-acid/12V lithium iron phosphate (4 strings of lithium iron fully charged at 14.6V)](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@solution-c-12v-lead-acid12v-lithium-iron-phosphate-4-strings-of-lithium-iron-fully-charged-at-146v)
+    - [3.5 protection circuit list (required)](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@35-protection-circuit-list-required)
+  - [4. Complete wiring table](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@4-complete-wiring-table)
+  - [5. Circuit debugging steps](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@5-circuit-debugging-steps)
+  - [6. Safety and practical precautions](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@6-safety-and-practical-precautions)
+    - [Electrical safety](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@electrical-safety)
+    - [Mechanical and waterproof](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@mechanical-and-waterproof)
+    - [Usage specifications](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@usage-specifications)
+    - [Circuit pit avoidance list](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@circuit-pit-avoidance-list)
+  - [7. Optional upgrade expansion circuit](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/电路案例/01-桨板推进器.md@7-optional-upgrade-expansion-circuit)
+
 ## Computer Science / JavaScript
 
 - [Variables and Types](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/JavaScript/01-变量与类型.md)

@@ -45,6 +45,29 @@
   - [九、补充：两类芯片电路架构对比](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/常见基本电路/02-芯片电路.md@九补充两类芯片电路架构对比)
   - [十、一句话总结层级关系](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/常见基本电路/02-芯片电路.md@十一句话总结层级关系)
 
+## 电子工程 / 电路案例
+
+- [桨板电动推进器电路设计笔记](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md)
+  - [一、功能需求梳理](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@一功能需求梳理)
+  - [二、整体电路](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@二整体电路)
+  - [三、分模块电路详解](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@三分模块电路详解)
+    - [3.1 无线遥控模块](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@31-无线遥控模块)
+    - [3.2 推进电机驱动单元（ESC电调）](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@32-推进电机驱动单元esc电调)
+    - [3.3 转向舵机单元](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@33-转向舵机单元)
+    - [3.4 电源与BEC降压单元（重点，分电池方案）](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@34-电源与bec降压单元重点分电池方案)
+      - [方案A：3S锂电（11.1V，充满12.6V）](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@方案a3s锂电111v充满126v)
+      - [方案B：4S锂电（14.8V，充满16.8V）](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@方案b4s锂电148v充满168v)
+      - [方案C：12V铅酸 / 12V磷酸铁锂（4串铁锂充满14.6V）](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@方案c12v铅酸-12v磷酸铁锂4串铁锂充满146v)
+    - [3.5 保护电路清单（必加）](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@35-保护电路清单必加)
+  - [四、完整接线总表](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@四完整接线总表)
+  - [五、电路调试步骤](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@五电路调试步骤)
+  - [六、安全与实操注意事项](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@六安全与实操注意事项)
+    - [电气安全](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@电气安全)
+    - [机械与防水](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@机械与防水)
+    - [使用规范](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@使用规范)
+    - [电路避坑清单](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@电路避坑清单)
+  - [七、可选升级拓展电路](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/电路案例/01-桨板推进器.md@七可选升级拓展电路)
+
 ## 计算机基础 / JavaScript
 
 - [变量与类型](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/JavaScript/01-变量与类型.md)

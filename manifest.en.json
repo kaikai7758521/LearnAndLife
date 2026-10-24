@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-24T09:46:41+00:00",
-  "count": 8,
+  "generatedAt": "2026-10-24T10:04:47+00:00",
+  "count": 9,
   "files": [
     {
       "path": "日常生活/运动/01-篮球.md",
@@ -41,6 +41,13 @@
         "Electronic Engineering",
         "Common basic circuits"
       ]
+    },
+    {
+      "path": "电子工程/电路案例/01-桨板推进器.md",
+      "pathEn": "en/电子工程/电路案例/01-桨板推进器.md",
+      "title": "Paddle electric propeller circuit design notes",
+      "description": "",
+      "tags": []
     },
     {
       "path": "计算机基础/JavaScript/01-变量与类型.md",
