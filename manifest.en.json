@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-24T15:16:56+00:00",
-  "count": 14,
+  "generatedAt": "2026-10-24T15:28:46+00:00",
+  "count": 15,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
@@ -20,6 +20,13 @@
       "path": "AI时代技术/基础概念/03-RAG工作流程.md",
       "pathEn": "en/AI时代技术/基础概念/03-RAG工作流程.md",
       "title": "RAG workflow",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "AI时代技术/基础概念/04-Token是怎么被消耗的.md",
+      "pathEn": "en/AI时代技术/基础概念/04-Token是怎么被消耗的.md",
+      "title": "Untitled",
       "description": "",
       "tags": []
     },

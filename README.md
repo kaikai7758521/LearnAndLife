@@ -56,6 +56,22 @@
     - [执行流程](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/03-RAG工作流程.md@执行流程)
     - [特点](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/03-RAG工作流程.md@特点-3)
     - [典型场景](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/03-RAG工作流程.md@典型场景-3)
+- [LLM Token 是怎么消耗的](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md)
+  - [一、Token 到底是什么](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@一token-到底是什么)
+    - [经验换算（仅估算，不能用来计费）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@经验换算仅估算不能用来计费)
+  - [二、两类Token：输入Prompt Token & 输出Completion Token](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@二两类token输入prompt-token-输出completion-token)
+    - [1. 输入Token（prompttokens，Prefill阶段）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@1-输入tokenprompttokensprefill阶段)
+    - [2. 输出Token（completiontokens，Decode阶段）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@2-输出tokencompletiontokensdecode阶段)
+  - [三、典型的Token高消耗场景](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@三典型的token高消耗场景)
+    - [场景1：Agent / Function Calling 工具调用循环](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@场景1agent-function-calling-工具调用循环)
+    - [场景2：RAG检索到超长文档片段](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@场景2rag检索到超长文档片段)
+    - [场景3：推理模型的thinking token](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@场景3推理模型的thinking-token)
+    - [场景4：上下文缓存（Prompt Cache）机制，改变计费规则](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@场景4上下文缓存prompt-cache机制改变计费规则)
+  - [四、Token消耗的两个技术阶段：Prefill 和 Decode](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@四token消耗的两个技术阶段prefill-和-decode)
+  - [五、Token统计边界：哪些算、哪些不算](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@五token统计边界哪些算哪些不算)
+  - [六、上下文窗口、maxtokens、Token消耗的约束关系](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@六上下文窗口maxtokenstoken消耗的约束关系)
+  - [七、如何减少Token消耗](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@七如何减少token消耗)
+  - [八、常见误区汇总](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md@八常见误区汇总)
 
 ## AI时代技术 / 技术实践
 

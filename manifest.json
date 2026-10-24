@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-24T15:16:57+00:00",
-  "count": 14,
+  "generatedAt": "2026-10-24T15:28:46+00:00",
+  "count": 15,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
@@ -28,6 +28,15 @@
       "icon": "",
       "tags": [],
       "size": 9453
+    },
+    {
+      "path": "AI时代技术/基础概念/04-Token是怎么被消耗的.md",
+      "title": "LLM Token 是怎么消耗的",
+      "date": "2026-10-24",
+      "lastModified": "2026-10-24",
+      "icon": "",
+      "tags": [],
+      "size": 9872
     },
     {
       "path": "AI时代技术/技术实践/01-建立自己的Agent.md",

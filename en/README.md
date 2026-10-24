@@ -56,6 +56,20 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
     - [Execution process](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/03-RAG工作流程.md@execution-process)
     - [Features](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/03-RAG工作流程.md@features-3)
     - [Typical scenarios](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/03-RAG工作流程.md@typical-scenarios-3)
+- [Untitled](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md)
+  - [1. What exactly is Token?](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@1-what-exactly-is-token)
+    - [Experience conversion (only estimate, cannot be used for billing)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@experience-conversion-only-estimate-cannot-be-used-for-billing)
+  - [2. Two types of Token: input Prompt Token & output Completion Token](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@2-two-types-of-token-input-prompt-token-output-completion-token)
+    - [1. Input Token (prompttokens, Prefill stage)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@1-input-token-prompttokens-prefill-stage)
+    - [2. Output Token (completiontokens, Decode stage)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@2-output-token-completiontokens-decode-stage)
+  - [3. Typical Token high consumption scenarios](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@3-typical-token-high-consumption-scenarios)
+    - [Scenario 1: Agent/Function Calling tool calling loop](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@scenario-1-agentfunction-calling-tool-calling-loop)
+    - [Scenario 2: RAG retrieves extremely long document fragments](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@scenario-2-rag-retrieves-extremely-long-document-fragments)
+    - [Scenario 3: thinking token of inference model](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@scenario-3-thinking-token-of-inference-model)
+    - [Scenario 4: Context Cache (Prompt Cache) mechanism, changing billing rules](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@scenario-4-context-cache-prompt-cache-mechanism-changing-billing-rules)
+  - [4. Two technical stages of Token consumption: Prefill and Decode](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@4-two-technical-stages-of-token-consumption-prefill-and-decode)
+  - [5. Token statistical boundary: what counts and what doesn’t](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@5-token-statistical-boundary-what-counts-and-what-doesnt)
+  - [6. Constraints on context window, maxtokens, and Token consumption](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md@6-constraints-on-context-window-maxtokens-and-token-consumption)
 
 ## AI时代技术 / 技术实践
 
