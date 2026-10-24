@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-24T09:33:40+00:00",
-  "count": 7,
+  "generatedAt": "2026-10-24T09:46:41+00:00",
+  "count": 8,
   "files": [
     {
       "path": "日常生活/运动/01-篮球.md",
@@ -72,6 +72,13 @@
         "Data Structures",
         "Complexity"
       ]
+    },
+    {
+      "path": "计算机基础/数据结构/02-树.md",
+      "pathEn": "en/计算机基础/数据结构/02-树.md",
+      "title": "Data structure - tree",
+      "description": "",
+      "tags": []
     }
   ]
 }
