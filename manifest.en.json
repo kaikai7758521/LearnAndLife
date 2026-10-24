@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-23T19:18:38+00:00",
-  "count": 5,
+  "generatedAt": "2026-10-24T09:33:40+00:00",
+  "count": 7,
   "files": [
     {
       "path": "日常生活/运动/01-篮球.md",
@@ -20,6 +20,26 @@
       "tags": [
         "badminton",
         "sports"
+      ]
+    },
+    {
+      "path": "电子工程/常见基本电路/01-最小系统.md",
+      "pathEn": "en/电子工程/常见基本电路/01-最小系统.md",
+      "title": "Minimal system circuit including chip",
+      "description": "",
+      "tags": [
+        "Electronic Engineering",
+        "Common basic circuits"
+      ]
+    },
+    {
+      "path": "电子工程/常见基本电路/02-芯片电路.md",
+      "pathEn": "en/电子工程/常见基本电路/02-芯片电路.md",
+      "title": "A brief introduction to chip circuits",
+      "description": "",
+      "tags": [
+        "Electronic Engineering",
+        "Common basic circuits"
       ]
     },
     {
