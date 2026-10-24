@@ -143,6 +143,7 @@ en/前端/JavaScript/01-变量与类型.md   # 英文译文（自动生成或手
 - **默认使用免费服务，不需要 API Key**：先调用 Google 免密钥接口，失败后自动回退 MyMemory；
 - 翻译前会把代码块、行内代码、公式、链接地址和 Markdown 标记替换成占位符，翻译后再还原，避免破坏结构；
 - 英文目录与中文目录一一对应，站内相对链接无需改写，切换语言时会自动读取 `en/` 下的对应文件；
+- 自动为新出现的目录生成英文名称并写入 `dirs.en.json`，侧边栏、面包屑和英文目录都会使用这些标签；
 - 生成 `manifest.en.json`（英文标题 / 标签），供站点侧边栏和搜索使用。
 
 可用的翻译服务：
@@ -265,6 +266,7 @@ python3 -m http.server 8080
 | `scripts/translate-notes.py` | 生成 / 更新 `en/` 下的英文译文与 `manifest.en.json`（默认使用免费 Google / MyMemory，由 Action 自动调用，也可本地运行） |
 | `scripts/update-readme.py` | 刷新 `manifest.json` 与 README.md / en/README.md 目录（Action 自动调用，也可本地运行） |
 | `manifest.en.json` | 自动生成的英文标题 / 标签索引（请一起提交） |
+| `dirs.en.json` | 自动生成的目录英文名称映射，供侧边栏 / 面包屑 / 英文目录使用（请一起提交；可手动修正标签） |
 | `en/README.md` | 自动生成的英文首页与目录（请一起提交） |
 | `USAGE.md` | 使用说明（本文件） |
 

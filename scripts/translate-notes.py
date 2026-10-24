@@ -58,6 +58,39 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 EN_DIR = "en"
 EN_MANIFEST = "manifest.en.json"
+DIR_LABELS_FILE = "dirs.en.json"
+
+# 已知目录的英文名；未知目录会调用翻译服务自动补充到 dirs.en.json。
+DEFAULT_DIR_LABELS = {
+    "前端": "Frontend",
+    "AI时代技术": "AI Technology",
+    "基础概念": "Basic Concepts",
+    "技术实践": "Hands-on Practice",
+    "电子工程": "Electronic Engineering",
+    "常见基本电路": "Common Basic Circuits",
+    "电路案例": "Circuit Projects",
+    "钓鱼": "Fishing",
+    "树算法": "Tree Algorithms",
+    "动态规划": "Dynamic Programming",
+    "排序算法": "Sorting Algorithms",
+    "链表和指针": "Linked Lists and Pointers",
+    "JavaScript": "JavaScript",
+    "日常生活": "Daily Life",
+    "运动": "Sports",
+    "后端": "Backend",
+    "计算机基础": "Computer Science",
+    "编译原理": "Compilers",
+    "电子电路": "Electronic Circuits",
+    "工程思想": "Engineering Thinking",
+    "数据结构": "Data Structures",
+    "算法": "Algorithms",
+    "网络": "Networking",
+    "计算机网络": "Computer Networks",
+    "操作系统": "Operating Systems",
+    "数据库": "Databases",
+    "工程化": "Engineering",
+    "工具": "Tooling",
+}
 
 # 与 assets/js/config.js、scripts/update-readme.py 保持一致
 EXCLUDE_DIRS = {"en", "assets", "scripts", "node_modules", ".github", "_site", ".jekyll-cache"}
@@ -770,6 +803,64 @@ def build_en_manifest() -> int:
     return len(entries)
 
 
+def read_dir_labels() -> dict[str, str]:
+    path = ROOT / DIR_LABELS_FILE
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    labels = data.get("labels", data) if isinstance(data, dict) else {}
+    if not isinstance(labels, dict):
+        return {}
+    return {str(key): str(value).strip() for key, value in labels.items()
+            if str(key).strip() and str(value).strip()}
+
+
+def collect_directories() -> list[str]:
+    dirs: set[str] = set()
+    for source in collect_sources():
+        for part in source.relative_to(ROOT).parts[:-1]:
+            if part not in EXCLUDE_DIRS and not part.startswith("."):
+                dirs.add(part)
+    return sorted(dirs)
+
+
+def build_dir_labels(chain: list[str]) -> int:
+    """为目录名生成英文标签，新增目录会自动翻译并写入 dirs.en.json。"""
+    existing = read_dir_labels()
+    labels: dict[str, str] = dict(DEFAULT_DIR_LABELS)
+    labels.update(existing)
+
+    directories = collect_directories()
+    pending = [name for name in directories if name not in labels and has_cjk(name)]
+    for name in pending:
+        for provider in chain:
+            try:
+                value = uppercase_first(translate_inline_value(name, provider)).strip().strip(".。")
+                if value and value != name:
+                    labels[name] = value
+                    log(f"  目录标签 {name} → {value}（{provider}）")
+                    break
+            except Exception as exc:
+                if provider == chain[-1]:
+                    log(f"  目录标签 {name} 翻译失败：{exc}")
+
+    for name in directories:
+        labels.setdefault(name, name)
+
+    if labels == existing:
+        return len(labels)
+
+    payload = {
+        "generatedAt": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
+        "labels": labels,
+    }
+    write_text(ROOT / DIR_LABELS_FILE, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    return len(labels)
+
+
 def provider_chain(requested: str) -> list[str]:
     if requested != "auto":
         return [requested]
@@ -840,7 +931,8 @@ def main() -> int:
     if not pending:
         print("英文译文已是最新，无需翻译。")
         count = build_en_manifest()
-        print(f"已刷新 {EN_MANIFEST}：{count} 篇英文笔记。")
+        dir_count = build_dir_labels(provider_chain(requested))
+        print(f"已刷新 {EN_MANIFEST}：{count} 篇英文笔记，{dir_count} 个目录标签。")
         return 0
 
     chain = provider_chain(requested)
@@ -870,7 +962,8 @@ def main() -> int:
             return 1
 
     count = build_en_manifest()
-    print(f"已刷新 {EN_MANIFEST}：{count} 篇英文笔记。")
+    dir_count = build_dir_labels(chain)
+    print(f"已刷新 {EN_MANIFEST}：{count} 篇英文笔记，{dir_count} 个目录标签。")
     return 0
 
 

@@ -30,6 +30,7 @@
 
   var CFG = Object.assign({}, DEFAULTS, window.SITE_CONFIG || {});
   var I18N = window.SITE_I18N || { zh: {}, en: {}, dirs: {} };
+  I18N.dirs = I18N.dirs || {};
 
   /* ------------------------------------------------------------- 基础工具 */
   function $(sel, root) { return (root || document).querySelector(sel); }
@@ -300,6 +301,7 @@
       state.manifestSource = manifest.source;
       state.fileMap = new Map();
       state.files.forEach(function (f) { state.fileMap.set(f.path, f); });
+      await loadDirLabels();
       await loadEnglishManifest();
       buildIndex();
       defaultExpand();
@@ -584,6 +586,20 @@
       .map(function (item) { return normalizeFile(item); })
       .filter(function (f) { return f && !isExcluded(f.path); });
     return { files: files, source: 'github' };
+  }
+
+  async function loadDirLabels() {
+    try {
+      var res = await fetch('./dirs.en.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) return;
+      var data = await res.json();
+      var labels = data && data.labels ? data.labels : data;
+      if (!labels || typeof labels !== 'object' || Array.isArray(labels)) return;
+      Object.keys(labels).forEach(function (key) {
+        var value = labels[key];
+        if (typeof value === 'string' && value.trim()) I18N.dirs[key] = value.trim();
+      });
+    } catch (e) { /* 没有目录标签文件时使用 i18n.js 内置映射 */ }
   }
 
   async function loadEnglishManifest() {

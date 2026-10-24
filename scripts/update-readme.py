@@ -43,6 +43,7 @@ README = ROOT / "README.md"
 README_EN = ROOT / "en" / "README.md"
 MANIFEST = ROOT / "manifest.json"
 MANIFEST_EN = ROOT / "manifest.en.json"
+DIR_LABELS_FILE = ROOT / "dirs.en.json"
 CONFIG_JS = ROOT / "assets" / "js" / "config.js"
 
 START_MARK = "<!-- NOTES:START -->"
@@ -57,19 +58,37 @@ EXCLUDE_FILES = {"README.md", "README.en.md", "USAGE.md", "AGENTS.md"}
 # 英文目录中展示的文件夹名称（未列出的目录保留原名）
 DIR_LABELS_EN = {
     "前端": "Frontend",
+    "AI时代技术": "AI Technology",
+    "基础概念": "Basic Concepts",
+    "技术实践": "Hands-on Practice",
+    "电子工程": "Electronic Engineering",
+    "常见基本电路": "Common Basic Circuits",
+    "电路案例": "Circuit Projects",
+    "钓鱼": "Fishing",
+    "树算法": "Tree Algorithms",
+    "动态规划": "Dynamic Programming",
+    "排序算法": "Sorting Algorithms",
+    "链表和指针": "Linked Lists and Pointers",
+    "JavaScript": "JavaScript",
     "日常生活": "Daily Life",
     "运动": "Sports",
     "后端": "Backend",
     "计算机基础": "Computer Science",
+    "编译原理": "Compilers",
+    "电子电路": "Electronic Circuits",
+    "工程思想": "Engineering Thinking",
     "数据结构": "Data Structures",
     "算法": "Algorithms",
     "网络": "Networking",
+    "计算机网络": "Computer Networks",
     "操作系统": "Operating Systems",
     "数据库": "Databases",
     "工程化": "Engineering",
     "工具": "Tooling",
     "根目录": "Root",
 }
+
+DIR_LABELS = dict(DIR_LABELS_EN)
 
 HEADING_RE = re.compile(r"^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$")
 FENCE_RE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
@@ -279,10 +298,26 @@ def collect_notes(base_url: str, lang: str = "zh") -> list[dict[str, object]]:
     return notes
 
 
+def load_dir_labels() -> dict[str, str]:
+    labels = dict(DIR_LABELS_EN)
+    if not DIR_LABELS_FILE.is_file():
+        return labels
+    try:
+        data = json.loads(DIR_LABELS_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return labels
+    values = data.get("labels", data) if isinstance(data, dict) else {}
+    if isinstance(values, dict):
+        for key, value in values.items():
+            if str(key).strip() and str(value).strip():
+                labels[str(key)] = str(value).strip()
+    return labels
+
+
 def group_heading(dir_path: str, lang: str) -> str:
     if not dir_path:
-        return DIR_LABELS_EN["根目录"] if lang == "en" else "根目录"
-    labels = [DIR_LABELS_EN.get(part, part) for part in dir_path.split("/")] if lang == "en" \
+        return DIR_LABELS["根目录"] if lang == "en" else "根目录"
+    labels = [DIR_LABELS.get(part, part) for part in dir_path.split("/")] if lang == "en" \
         else dir_path.split("/")
     return " / ".join(labels)
 
@@ -539,6 +574,9 @@ def main() -> int:
     if not README.is_file():
         print("找不到 README.md。", file=sys.stderr)
         return 1
+
+    global DIR_LABELS
+    DIR_LABELS = load_dir_labels()
 
     manifest_data = None
     manifest_en_data = None

@@ -1,11 +1,11 @@
 ---
-title: "Untitled"
+title: "How is  Token consumed?"
 lang: en
 translatedFrom: dd735a77f724b17edf05f76fe42ea73d649f96f33d0964ee377989fbf6b566af
 translatedAt: 2026-10-24
 ---
 
-How is # Token consumed?
+# How is  Token consumed?
 > is suitable for: developers, Prompt engineers, students who work on RAG/Agent and need to control the cost of large models
 > core: **Token is the smallest unit for large model calculation, billing, and context window restriction; a request is divided into "input Token (Prefill)" and "output Token (Decode)", the calculation logic, computing power overhead, and unit price of the two are different**
 
