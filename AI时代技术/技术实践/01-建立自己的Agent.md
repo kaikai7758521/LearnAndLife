@@ -1,7 +1,6 @@
 # 建立自己的Agent 
----
 
-# 用 OpenCode + DeepSeek API 搭建小说写作Agent
+**用 OpenCode + DeepSeek API 搭建小说写作Agent**
 > 说明：你**不需要写任何Python、LangGraph代码**。OpenCode自带Agent调度、工具调用、文件读写、子Agent能力；所有推理全部调用DeepSeek官方API，不本地部署大模型；你只需要准备好DeepSeek的API Key，跟着交互式命令一步步配置即可。
 > OpenCode内置工具：`read（读取文件）`、`write（写入文件）`，正好用来做小说设定读取、章节保存；支持创建子Agent，我们分成【主写作Agent】+【审查Critic子Agent】，实现之前方案里的规划、写稿、自查、保存闭环。
 
