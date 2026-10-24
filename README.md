@@ -80,7 +80,17 @@
     - [5. 终止循环，防止无限调用API](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/01-建立自己的Agent.md@5-终止循环防止无限调用api)
   - [验证路线](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/01-建立自己的Agent.md@验证路线)
   - [可选进阶玩法](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/01-建立自己的Agent.md@可选进阶玩法)
-- [建立自己的RAG](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md)
+- [自建RAG系统](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md)
+  - [前置认知](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md@前置认知)
+  - [步骤1：准备原始文档 & 文档加载](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md@步骤1准备原始文档-文档加载)
+  - [步骤2：文本切分 Chunking（RAG最容易翻车的环节）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md@步骤2文本切分-chunkingrag最容易翻车的环节)
+  - [步骤3：Embedding 向量化](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md@步骤3embedding-向量化)
+  - [步骤4：写入向量数据库，建立索引](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md@步骤4写入向量数据库建立索引)
+  - [步骤5：用户Query预处理](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md@步骤5用户query预处理)
+  - [步骤6：检索召回 Retrieval](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md@步骤6检索召回-retrieval)
+  - [步骤7：（可选，Demo一般省略）Rerank重排](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md@步骤7可选demo一般省略rerank重排)
+  - [步骤8：Prompt组装（把问题+检索片段打包喂给LLM）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md@步骤8prompt组装把问题检索片段打包喂给llm)
+  - [步骤9：LLM生成答案，返回结果 + 来源](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md@步骤9llm生成答案返回结果-来源)
 
 ## 日常生活 / 运动
 

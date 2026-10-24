@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-24T15:09:41+00:00",
-  "count": 13,
+  "generatedAt": "2026-10-24T15:16:56+00:00",
+  "count": 14,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
@@ -27,6 +27,13 @@
       "path": "AI时代技术/技术实践/01-建立自己的Agent.md",
       "pathEn": "en/AI时代技术/技术实践/01-建立自己的Agent.md",
       "title": "Uses OpenCode + DeepSeek API to build a novel writing agent",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "AI时代技术/技术实践/02-建立自己的RAG.md",
+      "pathEn": "en/AI时代技术/技术实践/02-建立自己的RAG.md",
+      "title": "Self-built RAG system",
       "description": "",
       "tags": []
     },
