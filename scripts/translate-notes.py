@@ -364,13 +364,13 @@ def protect_structure(text: str, store: TokenStore) -> str:
         task = re.match(r"^([ \t]*)([-+*]|\d+[.)])([ \t]+)(\[[ xX]\])([ \t]+)(.*)$", content)
         if task:
             prefix = "".join(task.group(i) for i in range(1, 6))
-            out.append(store.add(prefix, "I") + task.group(6) + newline)
+            out.append(store.add(prefix, "I") + " " + task.group(6) + newline)
             continue
 
         item = re.match(r"^([ \t]*)([-+*]|\d+[.)])([ \t]+)(.*)$", content)
         if item:
             prefix = item.group(1) + item.group(2) + item.group(3)
-            out.append(store.add(prefix, "I") + item.group(4) + newline)
+            out.append(store.add(prefix, "I") + " " + item.group(4) + newline)
             continue
 
         heading = re.match(r"^([ \t]{0,3})(#{1,6})([ \t]+)(.*)$", content)
@@ -382,7 +382,7 @@ def protect_structure(text: str, store: TokenStore) -> str:
             if trailing:
                 rest, suffix = trailing.group(1), trailing.group(2)
             out.append(
-                store.add(prefix, "D") + rest
+                store.add(prefix, "D") + " " + rest
                 + (store.add(suffix, "D") if suffix else "") + newline
             )
             continue
@@ -398,7 +398,7 @@ def protect_structure(text: str, store: TokenStore) -> str:
             )
             if callout:
                 inner = store.add(callout.group(1), "O") + " " + callout.group(2)
-            out.append(store.add(prefix, "Q") + inner + newline)
+            out.append(store.add(prefix, "Q") + " " + inner + newline)
             continue
 
         out.append(content + newline)

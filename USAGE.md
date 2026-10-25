@@ -114,10 +114,10 @@ python3 scripts/update-readme.py
 ```
 
 - 脚本会先扫描所有中文笔记，刷新 `manifest.json`（跳过 `en/`、README / USAGE）；
-- 再读取 front matter 的 `title`、第一个 `#` 标题和 H2–H4 小标题，生成 `README.md`；
+- 再读取 front matter 的 `title` 或第一个 `#` 标题，生成 `README.md`（只列出笔记标题）；
 - 存在英文译文时，会同步扫描 `en/` 生成英文目录 `en/README.md` 与英文索引 `manifest.en.json`；
-- 输出为纯目录形式：笔记标题本身即链接，小标题作为嵌套链接，行尾不再追加 URL；
-- 自动生成与页面一致的锚点链接，并按「学习方向 / 内容」分组；
+- 输出为纯目录形式：每篇笔记只占一行，标题本身即链接，不再展开 H2–H4 小标题；
+- 按「学习方向 / 内容」分组；
 - 只替换两个标记之间的内容，标记之外的介绍和说明保持不变；
 - 重复执行结果一致；加 `--check` 只检查是否需要更新，不写入文件；
 - 加 `--no-manifest` 可只刷新 README，不重写 `manifest.json` / `manifest.en.json`；

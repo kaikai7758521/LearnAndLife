@@ -14,9 +14,8 @@ README.md 与 en/README.md 中被下面两行注释包住的内容会被整体�
     <!-- NOTES:END -->
 
 目录中的标题、锚点规则与 assets/js/app.js 保持一致：
-    - 标题依次取 front matter 的 title → 第一个 # 标题 → 文件名；
-    - 小标题取 H2–H4，锚点使用页面同款 slugify 规则。
-生成结果是一份目录：笔记标题链接到页面，H2–H4 作为嵌套链接指向对应章节。
+    - 标题依次取 front matter 的 title → 第一个 # 标题 → 文件名。
+生成结果是一份简洁目录：每篇笔记只列出一行标题链接，不展开正文里的小标题。
 英文目录来自 `en/<笔记>.md`（由 scripts/translate-notes.py 生成），与中文目录结构一一对应。
 
 manifest.json 的字段与 scripts/build-manifest.ps1 保持一致：
@@ -93,7 +92,6 @@ DIR_LABELS = dict(DIR_LABELS_EN)
 HEADING_RE = re.compile(r"^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$")
 FENCE_RE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
 FRONT_MATTER_RE = re.compile(r"^\ufeff?---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.S)
-PUNCT_RE = re.compile(r"[!-,\.\/:-@\[-`{-~！-～、。，；：“”‘’（）【】《》〈〉〔〕…—·]")
 
 
 def plain_inline(text: str) -> str:
@@ -103,15 +101,6 @@ def plain_inline(text: str) -> str:
     text = re.sub(r"<[^>]+>", "", text)
     text = re.sub(r"[`*_~]", "", text)
     return html.unescape(text).strip()
-
-
-def slugify(text: str) -> str:
-    """与 assets/js/app.js 的 slugify 完全一致。"""
-    text = text.strip().lower()
-    text = re.sub(r"[\s\u00a0]+", "-", text)
-    text = PUNCT_RE.sub("", text)
-    text = re.sub(r"-+", "-", text)
-    return text.strip("-")
 
 
 def link_text(text: str) -> str:
@@ -139,21 +128,6 @@ def split_front_matter(text: str) -> tuple[dict[str, str], str]:
             value = kv.group(2).strip().strip('"').strip("'")
             meta[kv.group(1).lower()] = value
     return meta, text[match.end():]
-
-
-def strip_leading_h1(body: str, title: str) -> str:
-    """与 app.js 的 stripLeadingH1 一致：首行 H1 与标题匹配时移除。"""
-    match = re.match(r"^\s*#\s+([^\n]+)\n?", body)
-    if not match:
-        return body
-
-    heading = re.sub(r"[*_`~]", "", match.group(1))
-    heading = re.sub(r"\s+#+\s*$", "", heading).strip()
-    a = re.sub(r"\s+", "", heading).lower()
-    b = re.sub(r"\s+", "", title or "").lower()
-    if a and b and (a == b or b in a or a in b):
-        return body[match.end():].lstrip("\n")
-    return body
 
 
 def extract_headings(body: str) -> list[tuple[int, str]]:
@@ -193,10 +167,6 @@ def encode_component(value: str) -> str:
 
 def note_url(base_url: str, path: str) -> str:
     return base_url + "#/" + "/".join(encode_component(part) for part in path.split("/"))
-
-
-def anchor_url(base_url: str, path: str, anchor: str) -> str:
-    return note_url(base_url, path) + "@" + encode_component(anchor)
 
 
 def read_js_string(source: str, key: str) -> str:
@@ -269,27 +239,10 @@ def collect_notes(base_url: str, lang: str = "zh") -> list[dict[str, object]]:
         if not title:
             title = display_name(file_path.name)
 
-        body = strip_leading_h1(body, title)
-        headings = extract_headings(body)
-
-        used: dict[str, bool] = {}
-        outline: list[tuple[int, str, str]] = []
-        for level, text_value in headings:
-            base = slugify(text_value) or "section"
-            slug = base
-            index = 2
-            while used.get(slug):
-                slug = f"{base}-{index}"
-                index += 1
-            used[slug] = True
-            if 2 <= level <= 4:
-                outline.append((level, text_value, slug))
-
         notes.append({
             "path": rel_full if lang == "en" else rel,
             "dir": "/".join(parts[:-1]),
             "title": title,
-            "outline": outline,
             "url": note_url(base_url, rel_full if lang == "en" else rel),
             "lang": lang,
         })
@@ -336,10 +289,6 @@ def render_block(base_url: str, notes: list[dict[str, object]], lang: str = "zh"
         lines.extend([f"## {group_heading(dir_path, lang)}", ""])
         for note in groups[dir_path]:
             lines.append(f"- [{link_text(str(note['title']))}]({note['url']})")
-            for level, text_value, slug in note["outline"]:
-                indent = "  " * (level - 1)
-                link = anchor_url(base_url, str(note["path"]), slug)
-                lines.append(f"{indent}- [{link_text(text_value)}]({link})")
         lines.append("")
 
     lines.append(END_MARK)
@@ -551,7 +500,7 @@ def write_manifest(data: dict[str, object], path: Path = MANIFEST) -> None:
 def readme_en_template() -> str:
     return """# 📚 My Learning Notes
 
-Markdown study notes organized by **learning area / topic / detail**. This is the complete table of contents — click any title to open the page or section. Use the `EN` / `中文` button in the title bar to switch languages.
+Markdown study notes organized by **learning area / topic / detail**. This is the complete table of contents — click any title to open the page. Use the `EN` / `中文` button in the title bar to switch languages.
 
 <!-- NOTES:START -->
 <!-- NOTES:END -->
