@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-24T23:43:48+08:00",
+  "generatedAt": "2026-10-25T17:13:46+00:00",
   "labels": {
     "前端": "Frontend",
     "AI时代技术": "AI Technology",
@@ -28,6 +28,9 @@
     "操作系统": "Operating Systems",
     "数据库": "Databases",
     "工程化": "Engineering",
-    "工具": "Tooling"
+    "工具": "Tooling",
+    "基本算法": "Basic algorithm",
+    "数组算法": "Array arithmetic",
+    "iOS": "iOS"
   }
 }

@@ -183,6 +183,28 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
   - [Timers Are Not Precise](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/JavaScript/02-异步与事件循环.md@timers-are-not-precise)
   - [Related Notes](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/JavaScript/02-异步与事件循环.md@related-notes)
 
+## Computer Science / iOS
+
+- [IOS memory management low-level notes](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md)
+  - [1. Basic concepts: why memory management is needed](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@1-basic-concepts-why-memory-management-is-needed)
+  - [2. Object memory layout & isa and NONPOINTERISA](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@2-object-memory-layout-isa-and-nonpointerisa)
+  - [3. SideTable: the real container of reference counting and weak reference tables](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@3-sidetable-the-real-container-of-reference-counting-and-weak-reference-tables)
+    - [When to use SideTable’s RefcountMap?](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@when-to-use-sidetables-refcountmap)
+    - [Weaktablet weak reference table](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@weaktablet-weak-reference-table)
+  - [4. TaggedPointer: special “pseudo-object”](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@4-taggedpointer-special-pseudo-object)
+  - [5. AutoreleasePool automatic release pool](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@5-autoreleasepool-automatic-release-pool)
+    - [1. Function](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@1-function)
+    - [2. The underlying structure: not an array, but a doubly linked list](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@2-the-underlying-structure-not-an-array-but-a-doubly-linked-list)
+    - [3. When is it drained?](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@3-when-is-it-drained)
+    - [4. Classic scenario: creating a large number of temporary objects in a loop](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@4-classic-scenario-creating-a-large-number-of-temporary-objects-in-a-loop)
+    - [5. Important Rules](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@5-important-rules)
+  - [6. The difference between the underlying ARC modifiers (strong /weak / unsafeunretained /autoreleasing)](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@6-the-difference-between-the-underlying-arc-modifiers-strong-weak-unsafeunretained-autoreleasing)
+    - [Cyclic reference (Retain Cycle)](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@cyclic-reference-retain-cycle)
+  - [7. Object destruction process: dealloc underlying call link](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@7-object-destruction-process-dealloc-underlying-call-link)
+  - [8. Memory layout: iOS process memory partition](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@8-memory-layout-ios-process-memory-partition)
+  - [9. Common pitfalls & high-frequency interview questions and answers](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@9-common-pitfalls-high-frequency-interview-questions-and-answers)
+  - [10. Summary](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md@10-summary)
+
 ## Computer Science / Data Structures
 
 - [Arrays and Linked Lists](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/数据结构/01-数组与链表.md)
@@ -209,6 +231,21 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
   - [7. Heap](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/数据结构/02-树.md@7-heap)
   - [8. Huffman tree (Huffman tree/optimal binary tree)](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/数据结构/02-树.md@8-huffman-tree-huffman-treeoptimal-binary-tree)
   - [9. Summary of common comparisons](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/数据结构/02-树.md@9-summary-of-common-comparisons)
+
+## Computer Science / Algorithms / Basic algorithm
+
+- [Singleton](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/基本算法/01-单例.md)
+  - [IOS singleton](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/基本算法/01-单例.md@ios-singleton)
+  - [Java singleton](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/基本算法/01-单例.md@java-singleton)
+    - [Is loaded when initialized (thread safe)](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/基本算法/01-单例.md@is-loaded-when-initialized-thread-safe)
+    - [Lazy loading (loading when needed, risk of multi-threading, locking for double judgment)](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/基本算法/01-单例.md@lazy-loading-loading-when-needed-risk-of-multi-threading-locking-for-double-judgment)
+
+## Computer Science / Algorithms / Array arithmetic
+
+- [Untitled](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/01-数组中的重复数字.md)
+  - [Question 1](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/01-数组中的重复数字.md@question-1)
+  - [Solution](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/01-数组中的重复数字.md@solution)
+  - [Question 2](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/01-数组中的重复数字.md@question-2)
 
 <!-- NOTES:END -->
 

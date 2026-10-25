@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-24T15:48:58+00:00",
-  "count": 15,
+  "generatedAt": "2026-10-25T17:13:44+00:00",
+  "count": 18,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
@@ -113,6 +113,13 @@
       ]
     },
     {
+      "path": "计算机基础/iOS/01-内存管理.md",
+      "pathEn": "en/计算机基础/iOS/01-内存管理.md",
+      "title": "IOS memory management low-level notes",
+      "description": "",
+      "tags": []
+    },
+    {
       "path": "计算机基础/数据结构/01-数组与链表.md",
       "pathEn": "en/计算机基础/数据结构/01-数组与链表.md",
       "title": "Arrays and Linked Lists",
@@ -126,6 +133,20 @@
       "path": "计算机基础/数据结构/02-树.md",
       "pathEn": "en/计算机基础/数据结构/02-树.md",
       "title": "Data structure - tree",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/算法/基本算法/01-单例.md",
+      "pathEn": "en/计算机基础/算法/基本算法/01-单例.md",
+      "title": "Singleton",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/算法/数组算法/01-数组中的重复数字.md",
+      "pathEn": "en/计算机基础/算法/数组算法/01-数组中的重复数字.md",
+      "title": "Untitled",
       "description": "",
       "tags": []
     }
