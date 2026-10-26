@@ -51,7 +51,7 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 
 ## Computer Science / Algorithms / Array arithmetic
 
-- [Untitled](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/01-数组中的重复数字.md)
+- [Duplicated numbers in Array](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/01-数组中的重复数字.md)
 
 <!-- NOTES:END -->
 
