@@ -39,6 +39,10 @@
 ## 计算机基础 / iOS
 
 - [iOS 内存管理底层笔记](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/01-内存管理.md)
+- [SwiftUI 学习笔记：架构、底层原理、常用写法](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/02-SwiftUI.md)
+- [SwiftUI的数据流](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/03-SwiftUI的数据流.md)
+- [MVVM 架构](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/04-MVVM架构.md)
+- [Swift struct / class 详解](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/05-swift的class和struct.md)
 
 ## 计算机基础 / 数据结构
 

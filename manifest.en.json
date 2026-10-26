@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-26T17:16:59+00:00",
-  "count": 20,
+  "generatedAt": "2026-10-26T17:19:42+00:00",
+  "count": 24,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
@@ -116,6 +116,34 @@
       "path": "计算机基础/iOS/01-内存管理.md",
       "pathEn": "en/计算机基础/iOS/01-内存管理.md",
       "title": "IOS memory management low-level notes",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/iOS/02-SwiftUI.md",
+      "pathEn": "en/计算机基础/iOS/02-SwiftUI.md",
+      "title": "SwiftUI study notes: architecture, underlying principles, common writing methods",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/iOS/03-SwiftUI的数据流.md",
+      "pathEn": "en/计算机基础/iOS/03-SwiftUI的数据流.md",
+      "title": "SwiftUI data flow",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/iOS/04-MVVM架构.md",
+      "pathEn": "en/计算机基础/iOS/04-MVVM架构.md",
+      "title": "MVVM architecture",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/iOS/05-swift的class和struct.md",
+      "pathEn": "en/计算机基础/iOS/05-swift的class和struct.md",
+      "title": "Swift struct / class detailed explanation",
       "description": "",
       "tags": []
     },
