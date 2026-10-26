@@ -52,6 +52,11 @@
 ## 计算机基础 / 算法 / 数组算法
 
 - [数组中重复的数字](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/算法/数组算法/01-数组中的重复数字.md)
+- [查找二维数组中的数字](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/算法/数组算法/02-查找二维数组中的数字.md)
+
+## 计算机基础 / 算法 / 链表和指针
+
+- [倒序打印链表](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/算法/链表和指针/01-倒序打印链表.md)
 
 <!-- NOTES:END -->
 

@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-25T17:25:01+00:00",
-  "count": 18,
+  "generatedAt": "2026-10-26T11:01:00+00:00",
+  "count": 20,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
@@ -146,7 +146,21 @@
     {
       "path": "计算机基础/算法/数组算法/01-数组中的重复数字.md",
       "pathEn": "en/计算机基础/算法/数组算法/01-数组中的重复数字.md",
-      "title": "Untitled",
+      "title": "Repeated numbers in Array",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/算法/数组算法/02-查找二维数组中的数字.md",
+      "pathEn": "en/计算机基础/算法/数组算法/02-查找二维数组中的数字.md",
+      "title": "Finds numbers in a two-dimensional array",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/算法/链表和指针/01-倒序打印链表.md",
+      "pathEn": "en/计算机基础/算法/链表和指针/01-倒序打印链表.md",
+      "title": "Print linked list in reverse order",
       "description": "",
       "tags": []
     }

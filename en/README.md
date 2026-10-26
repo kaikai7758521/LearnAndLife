@@ -51,7 +51,12 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 
 ## Computer Science / Algorithms / Array arithmetic
 
-- [Duplicated numbers in Array](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/01-数组中的重复数字.md)
+- [Repeated numbers in Array](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/01-数组中的重复数字.md)
+- [Finds numbers in a two-dimensional array](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/02-查找二维数组中的数字.md)
+
+## Computer Science / Algorithms / Linked Lists and Pointers
+
+- [Print linked list in reverse order](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/链表和指针/01-倒序打印链表.md)
 
 <!-- NOTES:END -->
 
