@@ -10,7 +10,7 @@
   'use strict';
 
   var DEFAULTS = {
-    title: '我的学习笔记',
+    title: '记录和总结',
     subtitle: '知识沉淀 · 持续更新',
     brandIcon: '📚',
     footer: '持续学习，持续记录',
