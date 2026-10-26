@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T17:19:42+00:00",
+  "generatedAt": "2026-10-26T17:22:19+00:00",
   "count": 24,
   "files": [
     {
@@ -115,14 +115,14 @@
     {
       "path": "计算机基础/iOS/01-内存管理.md",
       "pathEn": "en/计算机基础/iOS/01-内存管理.md",
-      "title": "IOS memory management low-level notes",
+      "title": "IOS memory management",
       "description": "",
       "tags": []
     },
     {
       "path": "计算机基础/iOS/02-SwiftUI.md",
       "pathEn": "en/计算机基础/iOS/02-SwiftUI.md",
-      "title": "SwiftUI study notes: architecture, underlying principles, common writing methods",
+      "title": "SwiftUI: architecture, underlying principles, and common writing methods",
       "description": "",
       "tags": []
     },

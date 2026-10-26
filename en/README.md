@@ -38,8 +38,8 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 
 ## Computer Science / iOS
 
-- [IOS memory management low-level notes](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md)
-- [SwiftUI study notes: architecture, underlying principles, common writing methods](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/02-SwiftUI.md)
+- [IOS memory management](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/01-内存管理.md)
+- [SwiftUI: architecture, underlying principles, and common writing methods](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/02-SwiftUI.md)
 - [SwiftUI data flow](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/03-SwiftUI的数据流.md)
 - [MVVM architecture](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/04-MVVM架构.md)
 - [Swift struct / class detailed explanation](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/05-swift的class和struct.md)

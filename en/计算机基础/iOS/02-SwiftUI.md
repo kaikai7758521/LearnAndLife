@@ -1,11 +1,11 @@
 ---
-title: "SwiftUI study notes: architecture, underlying principles, common writing methods"
+title: "SwiftUI: architecture, underlying principles, and common writing methods"
 lang: en
-translatedFrom: 73bee30ffb3c10c07636b28992c0efe2d4aaca45efefee6bd1f5c66b7e9c1a8e
+translatedFrom: a61437efb3621bddc75851bce02606476ebb887c951cba953f183b50fa1f73b8
 translatedAt: 2026-10-26
 ---
 
-# SwiftUI study notes: architecture, underlying principles, common writing methods
+# SwiftUI: architecture, underlying principles, and common writing methods
 
 > 
 > Description: SwiftUI is the** declarative UI framework** launched by Apple at WWDC2019. It is cross-platform (iOS/macOS/watchOS/tvOS/visionOS), based on Swift, and UIKit/AppKit are two sets of paradigms, not a simple encapsulation of UIKit.
