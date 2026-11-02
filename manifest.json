@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-26T17:22:19+00:00",
-  "count": 24,
+  "generatedAt": "2026-11-02T08:50:06+00:00",
+  "count": 32,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
@@ -37,6 +37,15 @@
       "icon": "",
       "tags": [],
       "size": 9868
+    },
+    {
+      "path": "AI时代技术/基础概念/05-Harness技术.md",
+      "title": "大模型 Harness 技术",
+      "date": "2026-11-02",
+      "lastModified": "2026-11-02",
+      "icon": "",
+      "tags": [],
+      "size": 13167
     },
     {
       "path": "AI时代技术/技术实践/01-建立自己的Agent.md",
@@ -184,6 +193,51 @@
       "size": 7319
     },
     {
+      "path": "计算机基础/iOS/06-iOS的渲染流程.md",
+      "title": "iOS 渲染流程",
+      "date": "2026-11-02",
+      "lastModified": "2026-11-02",
+      "icon": "",
+      "tags": [],
+      "size": 10187
+    },
+    {
+      "path": "计算机基础/iOS/07-iOS的Metal.md",
+      "title": "iOS的Metal",
+      "date": "2026-11-02",
+      "lastModified": "2026-11-02",
+      "icon": "",
+      "tags": [],
+      "size": 13174
+    },
+    {
+      "path": "计算机基础/iOS/08-iOS跨端基本要义.md",
+      "title": "iOS 跨端",
+      "date": "2026-11-02",
+      "lastModified": "2026-11-02",
+      "icon": "",
+      "tags": [],
+      "size": 9041
+    },
+    {
+      "path": "计算机基础/iOS/09-iOS的网络编程.md",
+      "title": "iOS 网络编程完整梳理",
+      "date": "2026-11-02",
+      "lastModified": "2026-11-02",
+      "icon": "",
+      "tags": [],
+      "size": 12355
+    },
+    {
+      "path": "计算机基础/iOS/10-iOS的长链接处理.md",
+      "title": "iOS 长连接完整方案讲解",
+      "date": "2026-11-02",
+      "lastModified": "2026-11-02",
+      "icon": "",
+      "tags": [],
+      "size": 14273
+    },
+    {
       "path": "计算机基础/数据结构/01-数组与链表.md",
       "title": "数组与链表",
       "date": "2026-10-18",
@@ -230,6 +284,24 @@
       "icon": "",
       "tags": [],
       "size": 836
+    },
+    {
+      "path": "计算机基础/算法/查找和排序/01-二分查找.md",
+      "title": "二分查找",
+      "date": "2026-11-02",
+      "lastModified": "2026-11-02",
+      "icon": "",
+      "tags": [],
+      "size": 1101
+    },
+    {
+      "path": "计算机基础/算法/树算法/01-重建二叉树.md",
+      "title": "重建二叉树",
+      "date": "2026-11-02",
+      "lastModified": "2026-11-02",
+      "icon": "",
+      "tags": [],
+      "size": 1607
     },
     {
       "path": "计算机基础/算法/链表和指针/01-倒序打印链表.md",

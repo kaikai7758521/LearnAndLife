@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-26T17:22:19+00:00",
-  "count": 24,
+  "generatedAt": "2026-11-02T08:50:05+00:00",
+  "count": 32,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
@@ -27,6 +27,13 @@
       "path": "AI时代技术/基础概念/04-Token是怎么被消耗的.md",
       "pathEn": "en/AI时代技术/基础概念/04-Token是怎么被消耗的.md",
       "title": "How is  Token consumed?",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "AI时代技术/基础概念/05-Harness技术.md",
+      "pathEn": "en/AI时代技术/基础概念/05-Harness技术.md",
+      "title": "Large Model Harness Technology",
       "description": "",
       "tags": []
     },
@@ -148,6 +155,41 @@
       "tags": []
     },
     {
+      "path": "计算机基础/iOS/06-iOS的渲染流程.md",
+      "pathEn": "en/计算机基础/iOS/06-iOS的渲染流程.md",
+      "title": "IOS rendering process",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/iOS/07-iOS的Metal.md",
+      "pathEn": "en/计算机基础/iOS/07-iOS的Metal.md",
+      "title": "Metal for iOS",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/iOS/08-iOS跨端基本要义.md",
+      "pathEn": "en/计算机基础/iOS/08-iOS跨端基本要义.md",
+      "title": "IOS cross-terminal",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/iOS/09-iOS的网络编程.md",
+      "pathEn": "en/计算机基础/iOS/09-iOS的网络编程.md",
+      "title": "IOS network programming complete overview",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/iOS/10-iOS的长链接处理.md",
+      "pathEn": "en/计算机基础/iOS/10-iOS的长链接处理.md",
+      "title": "IOS long connection complete solution explanation",
+      "description": "",
+      "tags": []
+    },
+    {
       "path": "计算机基础/数据结构/01-数组与链表.md",
       "pathEn": "en/计算机基础/数据结构/01-数组与链表.md",
       "title": "Arrays and Linked Lists",
@@ -182,6 +224,20 @@
       "path": "计算机基础/算法/数组算法/02-查找二维数组中的数字.md",
       "pathEn": "en/计算机基础/算法/数组算法/02-查找二维数组中的数字.md",
       "title": "Finds numbers in a two-dimensional array",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/算法/查找和排序/01-二分查找.md",
+      "pathEn": "en/计算机基础/算法/查找和排序/01-二分查找.md",
+      "title": "Binary search",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/算法/树算法/01-重建二叉树.md",
+      "pathEn": "en/计算机基础/算法/树算法/01-重建二叉树.md",
+      "title": "Reconstructs the binary tree",
       "description": "",
       "tags": []
     },

@@ -11,6 +11,7 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 - [RAG technology and its principles](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/02-RAG技术及其原理.md)
 - [RAG workflow](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/03-RAG工作流程.md)
 - [How is  Token consumed?](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md)
+- [Large Model Harness Technology](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/05-Harness技术.md)
 
 ## AI Technology / Hands-on Practice
 
@@ -43,6 +44,11 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 - [SwiftUI data flow](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/03-SwiftUI的数据流.md)
 - [MVVM architecture](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/04-MVVM架构.md)
 - [Swift struct / class detailed explanation](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/05-swift的class和struct.md)
+- [IOS rendering process](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/06-iOS的渲染流程.md)
+- [Metal for iOS](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/07-iOS的Metal.md)
+- [IOS cross-terminal](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/08-iOS跨端基本要义.md)
+- [IOS network programming complete overview](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/09-iOS的网络编程.md)
+- [IOS long connection complete solution explanation](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/10-iOS的长链接处理.md)
 
 ## Computer Science / Data Structures
 
@@ -57,6 +63,14 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 
 - [Repeated numbers in Array](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/01-数组中的重复数字.md)
 - [Finds numbers in a two-dimensional array](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/02-查找二维数组中的数字.md)
+
+## Computer Science / Algorithms / Find and sort
+
+- [Binary search](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/查找和排序/01-二分查找.md)
+
+## Computer Science / Algorithms / Tree Algorithms
+
+- [Reconstructs the binary tree](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/树算法/01-重建二叉树.md)
 
 ## Computer Science / Algorithms / Linked Lists and Pointers
 

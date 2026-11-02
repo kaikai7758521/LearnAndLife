@@ -11,6 +11,7 @@
 - [RAG技术及其原理](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/02-RAG技术及其原理.md)
 - [RAG 工作流程](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/03-RAG工作流程.md)
 - [Token 是怎么消耗的](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md)
+- [大模型 Harness 技术](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/05-Harness技术.md)
 
 ## AI时代技术 / 技术实践
 
@@ -43,6 +44,11 @@
 - [SwiftUI的数据流](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/03-SwiftUI的数据流.md)
 - [MVVM 架构](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/04-MVVM架构.md)
 - [Swift struct / class 详解](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/05-swift的class和struct.md)
+- [iOS 渲染流程](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/06-iOS的渲染流程.md)
+- [iOS的Metal](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/07-iOS的Metal.md)
+- [iOS 跨端](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/08-iOS跨端基本要义.md)
+- [iOS 网络编程完整梳理](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/09-iOS的网络编程.md)
+- [iOS 长连接完整方案讲解](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/10-iOS的长链接处理.md)
 
 ## 计算机基础 / 数据结构
 
@@ -57,6 +63,14 @@
 
 - [数组中重复的数字](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/算法/数组算法/01-数组中的重复数字.md)
 - [查找二维数组中的数字](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/算法/数组算法/02-查找二维数组中的数字.md)
+
+## 计算机基础 / 算法 / 查找和排序
+
+- [二分查找](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/算法/查找和排序/01-二分查找.md)
+
+## 计算机基础 / 算法 / 树算法
+
+- [重建二叉树](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/算法/树算法/01-重建二叉树.md)
 
 ## 计算机基础 / 算法 / 链表和指针
 
