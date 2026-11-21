@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-11-02T08:50:06+00:00",
-  "count": 32,
+  "generatedAt": "2026-11-21T15:07:22+00:00",
+  "count": 36,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
@@ -46,6 +46,33 @@
       "icon": "",
       "tags": [],
       "size": 13167
+    },
+    {
+      "path": "AI时代技术/基础概念/06-MCP协议.md",
+      "title": "MCP 协议（Model Context Protocol）",
+      "date": "2026-11-21",
+      "lastModified": "2026-11-21",
+      "icon": "",
+      "tags": [],
+      "size": 12776
+    },
+    {
+      "path": "AI时代技术/基础概念/07-Embedding与向量检索原理.md",
+      "title": "Embedding 与向量检索原理",
+      "date": "2026-11-21",
+      "lastModified": "2026-11-21",
+      "icon": "",
+      "tags": [],
+      "size": 10579
+    },
+    {
+      "path": "AI时代技术/基础概念/08-微调与对齐.md",
+      "title": "微调与对齐：SFT / LoRA / RLHF / DPO",
+      "date": "2026-11-21",
+      "lastModified": "2026-11-21",
+      "icon": "",
+      "tags": [],
+      "size": 11147
     },
     {
       "path": "AI时代技术/技术实践/01-建立自己的Agent.md",
@@ -293,6 +320,15 @@
       "icon": "",
       "tags": [],
       "size": 1101
+    },
+    {
+      "path": "计算机基础/算法/查找和排序/02-回溯查找.md",
+      "title": "回溯查找",
+      "date": "2026-11-21",
+      "lastModified": "2026-11-21",
+      "icon": "",
+      "tags": [],
+      "size": 2162
     },
     {
       "path": "计算机基础/算法/树算法/01-重建二叉树.md",

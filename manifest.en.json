@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-11-02T08:50:05+00:00",
-  "count": 32,
+  "generatedAt": "2026-11-21T15:07:22+00:00",
+  "count": 36,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
@@ -34,6 +34,27 @@
       "path": "AI时代技术/基础概念/05-Harness技术.md",
       "pathEn": "en/AI时代技术/基础概念/05-Harness技术.md",
       "title": "Large Model Harness Technology",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "AI时代技术/基础概念/06-MCP协议.md",
+      "pathEn": "en/AI时代技术/基础概念/06-MCP协议.md",
+      "title": "MCP Protocol (Model Context Protocol)",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "AI时代技术/基础概念/07-Embedding与向量检索原理.md",
+      "pathEn": "en/AI时代技术/基础概念/07-Embedding与向量检索原理.md",
+      "title": "Embedding and vector retrieval principle",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "AI时代技术/基础概念/08-微调与对齐.md",
+      "pathEn": "en/AI时代技术/基础概念/08-微调与对齐.md",
+      "title": "Fine-tuning and alignment: SFT / LoRA / RLHF / DPO",
       "description": "",
       "tags": []
     },
@@ -231,6 +252,13 @@
       "path": "计算机基础/算法/查找和排序/01-二分查找.md",
       "pathEn": "en/计算机基础/算法/查找和排序/01-二分查找.md",
       "title": "Binary search",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "计算机基础/算法/查找和排序/02-回溯查找.md",
+      "pathEn": "en/计算机基础/算法/查找和排序/02-回溯查找.md",
+      "title": "Backtracking search",
       "description": "",
       "tags": []
     },

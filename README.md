@@ -12,6 +12,9 @@
 - [RAG 工作流程](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/03-RAG工作流程.md)
 - [Token 是怎么消耗的](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/04-Token是怎么被消耗的.md)
 - [大模型 Harness 技术](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/05-Harness技术.md)
+- [MCP 协议（Model Context Protocol）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/06-MCP协议.md)
+- [Embedding 与向量检索原理](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/07-Embedding与向量检索原理.md)
+- [微调与对齐：SFT / LoRA / RLHF / DPO](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/08-微调与对齐.md)
 
 ## AI时代技术 / 技术实践
 
@@ -67,6 +70,7 @@
 ## 计算机基础 / 算法 / 查找和排序
 
 - [二分查找](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/算法/查找和排序/01-二分查找.md)
+- [回溯查找](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/算法/查找和排序/02-回溯查找.md)
 
 ## 计算机基础 / 算法 / 树算法
 

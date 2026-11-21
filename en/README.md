@@ -12,6 +12,9 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 - [RAG workflow](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/03-RAG工作流程.md)
 - [How is  Token consumed?](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/04-Token是怎么被消耗的.md)
 - [Large Model Harness Technology](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/05-Harness技术.md)
+- [MCP Protocol (Model Context Protocol)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/06-MCP协议.md)
+- [Embedding and vector retrieval principle](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/07-Embedding与向量检索原理.md)
+- [Fine-tuning and alignment: SFT / LoRA / RLHF / DPO](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/08-微调与对齐.md)
 
 ## AI Technology / Hands-on Practice
 
@@ -67,6 +70,7 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 ## Computer Science / Algorithms / Find and sort
 
 - [Binary search](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/查找和排序/01-二分查找.md)
+- [Backtracking search](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/查找和排序/02-回溯查找.md)
 
 ## Computer Science / Algorithms / Tree Algorithms
 
