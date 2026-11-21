@@ -52,6 +52,9 @@
 - [iOS 跨端](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/08-iOS跨端基本要义.md)
 - [iOS 网络编程完整梳理](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/09-iOS的网络编程.md)
 - [iOS 长连接完整方案讲解](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/10-iOS的长链接处理.md)
+- [iOS 跨端技术的前世今生](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/11-iOS跨端技术的前世今生.md)
+- [WebView 跨端深入：WKWebView、JSBridge 与混合容器](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/12-WebView跨端深入.md)
+- [Flutter 深入：引擎、渲染与工程化](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/iOS/13-Flutter深入.md)
 
 ## 计算机基础 / 数据结构
 

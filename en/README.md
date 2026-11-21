@@ -52,6 +52,9 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 - [IOS cross-terminal](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/08-iOS跨端基本要义.md)
 - [IOS network programming complete overview](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/09-iOS的网络编程.md)
 - [IOS long connection complete solution explanation](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/10-iOS的长链接处理.md)
+- [IOS cross-terminal technology past and present](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/11-iOS跨端技术的前世今生.md)
+- [WebView cross-terminal in-depth: WKWebView, JSBridge and hybrid containers](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/12-WebView跨端深入.md)
+- [Flutter in-depth: engine, rendering and engineering](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/iOS/13-Flutter深入.md)
 
 ## Computer Science / Data Structures
 
