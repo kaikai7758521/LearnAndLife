@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-11-21T15:58:15+00:00",
-  "count": 40,
+  "generatedAt": "2026-11-24T14:54:03+00:00",
+  "count": 45,
   "files": [
     {
       "path": "AI时代技术/基础概念/01-AI常见概念盘点.md",
@@ -69,6 +69,41 @@
       "path": "AI时代技术/技术实践/02-建立自己的RAG.md",
       "pathEn": "en/AI时代技术/技术实践/02-建立自己的RAG.md",
       "title": "Build your own RAG",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "后端/基础概念/01-一次HTTP请求的后端旅程.md",
+      "pathEn": "en/后端/基础概念/01-一次HTTP请求的后端旅程.md",
+      "title": "The backend journey of an HTTP request",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "后端/基础概念/02-数据库索引与事务.md",
+      "pathEn": "en/后端/基础概念/02-数据库索引与事务.md",
+      "title": "Database index and transaction",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "后端/基础概念/03-缓存设计与一致性.md",
+      "pathEn": "en/后端/基础概念/03-缓存设计与一致性.md",
+      "title": "Cache design and consistency",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "后端/基础概念/04-消息队列与最终一致性.md",
+      "pathEn": "en/后端/基础概念/04-消息队列与最终一致性.md",
+      "title": "Message queue and eventual consistency",
+      "description": "",
+      "tags": []
+    },
+    {
+      "path": "后端/基础概念/05-服务稳定性设计.md",
+      "pathEn": "en/后端/基础概念/05-服务稳定性设计.md",
+      "title": "Service stability design: current limiting, fusing, degradation and observability",
       "description": "",
       "tags": []
     },

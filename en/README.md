@@ -21,6 +21,14 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 - [Build your own Agent](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/01-建立自己的Agent.md)
 - [Build your own RAG](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/技术实践/02-建立自己的RAG.md)
 
+## Backend / Basic Concepts
+
+- [The backend journey of an HTTP request](https://kaikai7758521.github.io/LearnAndLife/#/en/后端/基础概念/01-一次HTTP请求的后端旅程.md)
+- [Database index and transaction](https://kaikai7758521.github.io/LearnAndLife/#/en/后端/基础概念/02-数据库索引与事务.md)
+- [Cache design and consistency](https://kaikai7758521.github.io/LearnAndLife/#/en/后端/基础概念/03-缓存设计与一致性.md)
+- [Message queue and eventual consistency](https://kaikai7758521.github.io/LearnAndLife/#/en/后端/基础概念/04-消息队列与最终一致性.md)
+- [Service stability design: current limiting, fusing, degradation and observability](https://kaikai7758521.github.io/LearnAndLife/#/en/后端/基础概念/05-服务稳定性设计.md)
+
 ## Daily Life / Sports
 
 - [Basketball](https://kaikai7758521.github.io/LearnAndLife/#/en/日常生活/运动/01-篮球.md)

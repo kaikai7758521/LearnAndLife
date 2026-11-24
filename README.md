@@ -21,6 +21,14 @@
 - [建立自己的Agent](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/01-建立自己的Agent.md)
 - [建立自己的RAG](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/技术实践/02-建立自己的RAG.md)
 
+## 后端 / 基础概念
+
+- [一次 HTTP 请求的后端旅程](https://kaikai7758521.github.io/LearnAndLife/#/后端/基础概念/01-一次HTTP请求的后端旅程.md)
+- [数据库索引与事务](https://kaikai7758521.github.io/LearnAndLife/#/后端/基础概念/02-数据库索引与事务.md)
+- [缓存设计与一致性](https://kaikai7758521.github.io/LearnAndLife/#/后端/基础概念/03-缓存设计与一致性.md)
+- [消息队列与最终一致性](https://kaikai7758521.github.io/LearnAndLife/#/后端/基础概念/04-消息队列与最终一致性.md)
+- [服务稳定性设计：限流、熔断、降级与可观测](https://kaikai7758521.github.io/LearnAndLife/#/后端/基础概念/05-服务稳定性设计.md)
+
 ## 日常生活 / 运动
 
 - [篮球](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/运动/01-篮球.md)
