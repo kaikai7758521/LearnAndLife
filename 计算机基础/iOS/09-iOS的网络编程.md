@@ -9,7 +9,7 @@ iOS 网络编程本质：**在 iOS 进程内，通过操作系统提供的网络
 
 ## 一、基础技术原理
 ### 1. 协议基础
-- **HTTP/HTTPS**：应用层协议，基于 TCP。HTTPS = HTTP + TLS 加密，现在强制 ATS 要求默认 HTTPS。
+- **HTTP/HTTPS**：应用层协议，基于 TCP。HTTPS = HTTP + TLS 加密，现在强制 ATS 要求默认 HTTPS。URLSession 会通过 ALPN 自动协商 HTTP/2；服务端支持时，较新系统还会协商 HTTP/3（QUIC），业务代码不需要改动。
 - **TCP**：面向连接、可靠、有序、流量控制、拥塞控制；三次握手、四次挥手。适合接口、文件上传下载、IM长连接。
 - **UDP**：无连接、不可靠、无有序保证；开销小，适合直播、实时语音、游戏。
 - **WebSocket**：基于 HTTP 握手，之后升级为全双工 TCP 长连接，适合推送、实时消息。
@@ -24,35 +24,75 @@ iOS 网络编程本质：**在 iOS 进程内，通过操作系统提供的网络
     特点：支持流、TLS 配置、代理；是 URLSession 的底层依赖；可以在底层精细控制 TLS、证书校验。
     适用：流式上传下载、自定义 TLS 校验、老项目长连接。
 3. **Foundation 高层：URLSession（Swift/OC，首选）**
-    面向对象封装，基于 CFNetwork，Runloop 异步模型，系统独立进程管理网络任务。
+    面向对象封装，基于 CFNetwork，异步回调模型，系统独立进程管理网络任务。
     三大任务类型：
     - `URLSessionDataTask`：短请求，拿到完整内存数据（普通接口 JSON）
     - `URLSessionDownloadTask`：下载，数据写到磁盘，支持后台下载、断点续传
     - `URLSessionUploadTask`：上传，支持文件流上传，后台上传
-    额外：`URLStreamTask`（iOS15+，替代 CFStream，WebSocket/流式）
+    额外：`URLSessionStreamTask`（iOS 9+）把 TCP 连接包装成读写流，适合自定义二进制协议；`URLSessionWebSocketTask`（iOS 13+）负责 WebSocket 全双工通信。
 4. **第三方封装（Alamofire、Moya）**
     只是 URLSession 的上层语法糖，不改变底层网络能力，简化参数、编码、拦截器、重试。
 
 ### 3. 异步模型原理（重点）
 URLSession 不是在当前线程直接回调：
-- 默认 `URLSession.shared`：使用系统全局 delegate queue，回调在**子线程**！UI 更新必须切回主线程 `DispatchQueue.main`。
+- 默认 `URLSession.shared`：completion handler 在 session 的 `delegateQueue`（系统创建的串行队列）回调，**不保证主线程**！UI 更新必须切回主线程 `DispatchQueue.main`。
 - Session 分为两种模式：
   1. **completionHandler 闭包模式**：简单，请求结束一次性回调数据/错误；无法监听上传下载进度。
   2. **delegate 代理模式**：强大，可监听进度、重定向、证书挑战、流式接收、后台任务；需要设置 `delegate` + `delegateQueue`。
 > 后台任务（后台下载/上传）特殊：App 被系统挂起后，由系统独立进程继续跑；完成后系统唤醒 App，调用代理回调。
 
 ### 4. ATS（App Transport Security）原理
-iOS9+ 默认开启 ATS：**禁止明文 HTTP**，要求服务器 TLS 满足安全标准（TLS1.2+，加密套件合规）。
-- 可以在 Info.plist 配置白名单：`NSAppTransportSecurity`
-- 生产强烈不建议全局关闭 `NSAllowsArbitraryLoads`，只给特定域名放行。
+iOS9+ 默认开启 ATS：**禁止明文 HTTP**，要求服务器 TLS 满足安全标准（TLS1.2+、前向保密、合规加密套件）。
+- 可以在 Info.plist 配置例外：`NSAppTransportSecurity`
+- 生产强烈不建议全局关闭 `NSAllowsArbitraryLoads`；只给确实无法升级的域名配置 `NSExceptionDomains`；
+- 本地开发/局域网调试可用 `NSAllowsLocalNetworking`，不要带到生产；
+- ATS 只约束 **URL Loading System（URLSession/CFNetwork 的 HTTP 栈）**；直接使用 BSD Socket 发原始 TCP 不受 ATS 检查，但这不代表可以绕过审核与安全要求。
 
-### 5. 证书校验（TLS 双向认证）
+### 5. 证书校验与 SSL Pinning
 HTTPS 默认逻辑：客户端校验服务器证书（单向认证）；
-双向认证：客户端还要携带 p12/pfx 证书发给服务器校验。
-URLSession 遇到证书挑战时，会回调 `URLSessionDelegate didReceive challenge`，在这里可以：
-- 使用系统默认校验
-- **证书固定（SSL Pinning）**：App 内置服务器公钥/证书，只信任固定证书，防止中间人劫持。
-> ⚠️ 证书固定坑：证书到期轮换，App 不更新就全部断网。
+双向认证：客户端还要携带 p12/pfx 证书发给服务器校验（`NSURLAuthenticationMethodClientCertificate`）。
+
+URLSession 遇到证书挑战时，会回调 `URLSessionDelegate` 的 `didReceive challenge`：
+- 不实现该回调，或使用 `.performDefaultHandling`：走系统校验；
+- 实现 **证书固定（SSL Pinning）**：只信任内置的证书或公钥，防止中间人劫持。
+
+```swift
+import CryptoKit
+
+enum PinnedCertificates {
+    static let hashes: Set<Data> = [
+        // 内置证书的 SHA-256；轮换时至少保留新旧两套
+    ]
+}
+
+func urlSession(_ session: URLSession,
+                didReceive challenge: URLAuthenticationChallenge,
+                completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+    guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+          let trust = challenge.protectionSpace.serverTrust,
+          let chain = SecTrustCopyCertificateChain(trust) as? [SecCertificate], // iOS 15+，旧系统用 SecTrustGetCertificateAtIndex
+          let leaf = chain.first else {
+        completionHandler(.performDefaultHandling, nil)
+        return
+    }
+
+    let certData = SecCertificateCopyData(leaf) as Data
+    let hash = Data(SHA256.hash(data: certData))
+    if PinnedCertificates.hashes.contains(hash) {
+        completionHandler(.useCredential, URLCredential(trust: trust))
+    } else {
+        completionHandler(.cancelAuthenticationChallenge, nil)
+    }
+}
+```
+要点：
+- 证书固定比公钥固定简单，但**证书轮换时必须发版**；
+- 公钥固定（SPKI）更抗轮换，但要处理多套公钥与灰度；
+- 至少内置一张备用证书/公钥，避免单点失效；
+- 固定失败要能上报，但不要在生产「校验失败就放行」；
+- 双向认证还要处理客户端证书读取、密码、过期。
+
+> ⚠️ 证书固定坑：证书到期轮换，App 不更新就全部断网；上线前必须演练一次轮换。
 
 ---
 
@@ -66,7 +106,7 @@ let task = URLSession.shared.dataTask(with: url) { data, resp, err in
         return
     }
     guard let data = data, let httpResp = resp as? HTTPURLResponse, httpResp.statusCode == 200 else { return }
-    // 解析 JSON，这里在子线程
+    // 解析 JSON；注意回调不保证主线程
     DispatchQueue.main.async {
         // 更新 UI
     }
@@ -129,27 +169,128 @@ task.send(.string("hello")) { error in }
 
 常用配置项：
 ```swift
-config.timeoutIntervalForRequest = 15 // 请求超时
-config.timeoutIntervalForResource = 60 // 资源总超时
-config.requestCachePolicy = .reloadIgnoringLocalCacheData // 缓存策略
-config.httpAdditionalHeaders = ["token":"xxx"] // 全局请求头
-config.allowsCellularAccess = true // 是否允许蜂窝
-config.allowsExpensiveNetworkAccess = true // 允许热点
+config.timeoutIntervalForRequest = 15          // 单次请求空闲超时
+config.timeoutIntervalForResource = 60         // 整个资源总超时
+config.requestCachePolicy = .useProtocolCachePolicy
+config.waitsForConnectivity = true             // 无网时等待，而不是立刻失败（iOS 11+）
+config.allowsCellularAccess = true
+config.allowsExpensiveNetworkAccess = true     // 允许热点/昂贵网络
+config.allowsConstrainedNetworkAccess = false  // 低数据模式下是否允许（iOS 13+）
+config.httpMaximumConnectionsPerHost = 6       // HTTP/1.1 单域名连接上限
+config.httpAdditionalHeaders = ["Accept": "application/json"] // 通用头，别把 token 写死在这里
+config.urlCache = URLCache(memoryCapacity: 20 * 1024 * 1024,
+                           diskCapacity: 100 * 1024 * 1024)
 ```
+> 全局 `httpAdditionalHeaders` 会作用到该 session 的所有请求；登录 token 应放在具体请求的 `Authorization` 头里，避免串号与泄漏。
 
 ### 8. 缓存机制
 HTTP 缓存由 `Cache-Control`、`ETag`、`Last-Modified` 控制；URLSession 内置缓存数据库。
 缓存策略：
 - `.useProtocolCachePolicy`：遵循 HTTP header（默认）
 - `.reloadIgnoringLocalCacheData`：不走缓存
+- `.reloadIgnoringLocalAndRemoteCacheData`：本地与代理缓存都忽略
 - `.returnCacheDataElseLoad`：有缓存先用缓存，没有再请求
+- `.returnCacheDataDontLoad`：只用缓存，离线模式
+
+### 9. 任务指标：URLSessionTaskMetrics
+URLSession 自带每一跳的耗时拆解，排查「DNS 慢、TLS 慢、服务端慢」非常有用：
+```swift
+final class MetricsDelegate: NSObject, URLSessionTaskDelegate {
+    func urlSession(_ session: URLSession,
+                    task: URLSessionTask,
+                    didFinishCollecting metrics: URLSessionTaskMetrics) {
+        guard let tx = metrics.transactionMetrics.last else { return }
+        print("协议:", tx.networkProtocolName ?? "-")
+        print("连接复用:", tx.isReusedConnection)
+        print("走代理:", tx.isProxyConnection)
+        print("DNS:", tx.dnsStartDate as Any, tx.dnsEndDate as Any)
+        print("TCP:", tx.connectStartDate, tx.connectEndDate)
+        print("TLS:", tx.secureConnectionStartDate as Any, tx.secureConnectionEndDate as Any)
+        print("TTFB:", tx.responseStartDate.timeIntervalSince(tx.requestStartDate))
+        print("总耗时:", metrics.taskInterval.duration)
+    }
+}
+```
+| 指标 | 对应阶段 | 异常时优先排查 |
+|---|---|---|
+| `dnsStartDate/dnsEndDate` | DNS 解析 | 域名过多、DNS 服务、IPv6 回退 |
+| `connectStartDate/connectEndDate` | TCP 建连 | 网络质量、跨地域、连接未复用 |
+| `secureConnectionStartDate/secureConnectionEndDate` | TLS 握手 | 证书链、TLS 版本、Pinning |
+| `requestStartDate → responseStartDate` | 首字节 TTFB | 服务端处理、网关排队 |
+| `responseEndDate` | 响应完成 | 响应体大小、带宽 |
+| `isReusedConnection` | 连接复用 | 大量 false 说明连接池未生效 |
+
+> `URLSession.shared` 不能设置自定义 delegate；要用指标、证书校验、进度回调，必须创建自己的 `URLSession`。
+> 指标只在 Debug/采样环境开启即可，线上全量采集会增加开销。
+
+### 10. 等待网络与受限网络
+```swift
+config.waitsForConnectivity = true
+config.timeoutIntervalForResource = 60
+config.allowsConstrainedNetworkAccess = false   // 低数据模式下禁止大流量
+```
+- `waitsForConnectivity = true`：无网时任务进入等待，而不是立刻报 `notConnectedToInternet`；
+- 等待仍受 `timeoutIntervalForResource` 限制，不会无限等；
+- 可实现 `urlSession(_:taskIsWaitingForConnectivity:)` 给用户提示；
+- 低数据模式（Low Data Mode）用 `allowsConstrainedNetworkAccess` 控制；
+- 热点/计费网络用 `allowsExpensiveNetworkAccess` 控制。
+
+### 11. 断点续传与后台会话
+```swift
+// 暂停并保存续传数据
+downloadTask.cancel(byProducingResumeData: { resumeData in
+    if let resumeData {
+        try? resumeData.write(to: resumeDataURL)
+    }
+})
+
+// 恢复下载
+let data = try Data(contentsOf: resumeDataURL)
+let task = session.downloadTask(withResumeData: data)
+task.resume()
+```
+后台会话被系统回收后，App 重启时要用**同一个 identifier** 重建 session：
+```swift
+func application(_ application: UIApplication,
+                 handleEventsForBackgroundURLSession identifier: String,
+                 completionHandler: @escaping () -> Void) {
+    backgroundCompletionHandler = completionHandler
+    let config = URLSessionConfiguration.background(withIdentifier: identifier)
+    config.sessionSendsLaunchEvents = true
+    backgroundSession = URLSession(configuration: config, delegate: self, delegateQueue: nil)
+}
+
+func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
+    DispatchQueue.main.async {
+        self.backgroundCompletionHandler?()
+        self.backgroundCompletionHandler = nil
+    }
+}
+```
+> 后台任务能扛「系统挂起/回收」，但**用户上滑强杀 App 后不会继续**；`completionHandler` 必须调用，否则系统会降低后续唤醒优先级。
+
+### 12. WebSocket 保活
+```swift
+func startHeartbeat(_ task: URLSessionWebSocketTask, interval: TimeInterval = 20) {
+    task.sendPing { [weak task] error in
+        guard error == nil, let task else { return }
+        DispatchQueue.global().asyncAfter(deadline: .now() + interval) {
+            startHeartbeat(task, interval: interval)
+        }
+    }
+}
+```
+- `URLSessionWebSocketTask` 不会自动重连，断线要自己实现指数退避重连；
+- 心跳间隔要小于服务端/网关的空闲超时；
+- `receive` 是「收一条停一次」，需要循环调用；
+- 弱网下要区分「暂时无消息」和「连接已断」，结合 ping/pong 与 error 判断。
 
 ---
 
 ## 三、注意事项 
 ### 1. 线程问题（最高频）
-✅ URLSession 回调默认在**子线程**，绝对不能直接操作 UIKit/SwiftUI；
-❌ 不要在回调里直接改界面；✅ 必须 `DispatchQueue.main.async` 切主线程。
+✅ URLSession 的回调默认在 session 的 `delegateQueue`（系统串行队列）执行，**不保证主线程**；
+❌ 不要在回调里直接改界面；✅ 必须 `DispatchQueue.main.async` 切主线程，或初始化时把 `delegateQueue` 设为主队列。
 
 ### 2. 超时两个参数区分
 - `timeoutIntervalForRequest`：**空闲超时**，一段时间没有收到新数据包就超时
@@ -163,6 +304,7 @@ HTTP 缓存由 `Cache-Control`、`ETag`、`Last-Modified` 控制；URLSession �
 ### 4. 后台任务限制
 - 后台下载有数量限制、系统调度优先级低；
 - 后台回调在 AppDelegate / SceneDelegate 的 `handleEventsForBackgroundURLSession` 里重建 session；
+- 系统挂起/回收 App 时任务可继续，但**用户上滑强杀 App 后不会继续**；
 - 后台任务不适合实时性要求高的场景。
 
 ### 5. ATS 和证书坑
@@ -177,7 +319,7 @@ TCP 是字节流，没有消息边界。`send` 多少次和 `recv` 读到多少�
 UDP 不存在粘包，一个 recvfrom 拿到一个完整报文。
 
 ### 7. 网络可达性监听
-苹果推荐：`NWPathMonitor`（Network framework，iOS12+），废弃老的 `Reachability`（老 SCNetworkReachability）
+苹果推荐：`NWPathMonitor`（Network framework，iOS12+），替代社区里常见的 `SCNetworkReachability` / Reachability 封装。
 可以监听：WiFi/蜂窝、是否有网、是否昂贵网络（热点）。
 ⚠️ 可达性 ≠ 能连通服务器：手机连上 WiFi，但路由器断外网，依然显示有网络。**只能做提示，不能代替请求失败判断**。
 
@@ -193,31 +335,91 @@ UDP 不存在粘包，一个 recvfrom 拿到一个完整报文。
 苹果要求 App 必须支持 IPv6-only 网络环境；不要硬编码 IPv4 地址写死在代码里，优先域名。
 
 ### 11. 代理（系统 HTTP 代理、VPN）
-URLSession **自动继承系统代理配置**，不需要额外代码；底层 Socket 默认不自动走系统代理，需要用 CFNetwork 或者 NWFramework 才会自动适配代理。这是底层 Socket 开发一个大坑。
+URLSession **自动继承系统 HTTP 代理与 VPN 配置**，不需要额外代码；底层 BSD Socket 不会自动读取系统 HTTP 代理，需要自己实现代理握手，或改用 CFNetwork / Network.framework 并显式配置代理。这是底层 Socket 开发的一个大坑。
 
 ### 12. 错误类型区分
-`URLError`：URLSession 错误枚举
-常见：
-- `.timedOut`：超时
-- `.notConnectedToInternet`：无网络
-- `.cancelled`：任务主动 cancel
-- `.cannotConnectToHost`：连不上主机
+`URLError` 是网络层错误，和 HTTP 状态码、解析错误是三件不同的事：
 
-> 业务上要区分：网络层错误、服务器返回 4xx/5xx、数据解析错误，给到用户友好提示。
+| 错误 | 含义 | 典型处理 |
+|---|---|---|
+| `.timedOut` | 连接/读取超时 | 可重试，指数退避 |
+| `.notConnectedToInternet` | 无网络 | 提示检查网络，等网络恢复 |
+| `.networkConnectionLost` | 连接中途断开 | 可重试，注意幂等 |
+| `.cannotConnectToHost` | 连不上主机 | 服务不可用/端口错误 |
+| `.cannotFindHost` | DNS 解析失败 | 域名/DNS 问题 |
+| `.secureConnectionFailed` | TLS 握手失败 | 证书、TLS 版本、Pinning |
+| `.serverCertificateUntrusted` | 证书不受信任 | 不要在生产绕过 |
+| `.cancelled` | 主动取消 | 正常控制流，不提示错误 |
+| `.httpTooManyRedirects` | 重定向死循环 | 检查 301/302 配置 |
 
-### 13. 并发、请求限流
-URLSession 有默认最大并发数，可以通过 `httpMaximumConnectionsPerHost` 设置单域名最大并发请求；
-短时间大量并发请求容易被服务器限流，客户端要做请求队列、防抖。
+> 业务上要分三层：网络层错误（URLError）、HTTP 错误（4xx/5xx）、数据错误（解析/校验失败），分别给用户不同提示，也分别决定是否重试。
+
+### 13. 并发、连接数与限流
+`httpMaximumConnectionsPerHost` 限制的是**单域名连接数**，不是 QPS；HTTP/2 会在一条连接上多路复用，实际并发能力更强。
+URLSession 没有内置 QPS 限流，短时间大量请求需要自己做请求队列、令牌桶或防抖，并遵守服务端 `429 + Retry-After`。
 
 ### 14. 隐私权限
-iOS 14+ 网络本身不需要权限；但 **NWPathMonitor 监听网络状态在某些场景需要网络权限说明**；另外如果用本地网络（局域网通信），需要 `NSLocalNetworkUsageDescription`。
+iOS 14+ 访问公网本身不需要权限；`NWPathMonitor` 只监听网络状态，也不需要权限。
+真正需要权限的是**本地网络**：访问局域网设备、Bonjour、组播等，需要 `NSLocalNetworkUsageDescription`，并在 Info.plist 声明 `NSBonjourServices`（如使用 Bonjour）。
 
 ### 15. Swift Concurrency（async/await）新写法（iOS15+）
 ```swift
-let (data, resp) = try await URLSession.shared.data(from: url)
+let (data, response) = try await URLSession.shared.data(from: url)
+guard let http = response as? HTTPURLResponse,
+      (200..<300).contains(http.statusCode) else {
+    throw NetworkError.badStatus
+}
 ```
-async/await 是对 completion 的语法糖，底层还是 URLSession，代码简洁，自动切换模型，现在新项目优先用。
-- async 版本**没有进度回调**；进度、证书校验、后台下载依然需要 delegate。
+`data(for:)` / `download(for:)` / `upload(for:from:)` 是对 completion API 的现代封装，底层仍是 URLSession。
+
+注意：
+- **async 版本不会自动校验 HTTP 状态码**，`4xx/5xx` 也会正常返回 `data`，必须自己判断；
+- async 版本**没有进度回调**；进度、证书校验、后台下载仍要用 delegate；
+- 大文件下载用 `download(for:)`，`data(for:)` 会把整个响应读进内存；
+- `URLSession.shared` 不能设置 delegate，需要自定义能力时创建自己的 session。
+
+### 16. 超时、重试与幂等
+| 情况 | 是否重试 | 说明 |
+|---|---|---|
+| DNS 失败、连接失败、超时 | ✅ | 指数退避 + 抖动，限制次数 |
+| 5xx | ✅ | 服务端临时错误，可重试 |
+| 429 | ⚠️ | 必须遵守 `Retry-After` |
+| 400/401/403/404 | ❌ | 重试不会成功，先修请求或登录态 |
+| 非幂等 POST | ❌ | 除非带幂等键，否则可能重复下单 |
+| 用户主动取消 | ❌ | `URLError.cancelled` 不是故障 |
+
+```swift
+func retryDelay(attempt: Int) -> TimeInterval {
+    let base = min(8.0, pow(2.0, Double(attempt)))   // 1,2,4,8...
+    return Double.random(in: 0...base)               // full jitter，避免惊群
+}
+```
+- URLSession **不会自动重试**（除少数系统级重定向/连接恢复），需要自己实现或用 Alamofire 的 interceptor；
+- 重试只在一层做：网关重试了，客户端就别层层重试；
+- 客户端总超时要略大于服务端处理预算，让服务端的错误能返回；但都必须有上限；
+- `waitsForConnectivity` 是「等待网络」，不是「失败重试」，别混用；
+- 幂等键建议由客户端生成 UUID，服务端唯一索引落库。
+
+### 17. 请求取消与页面生命周期
+```swift
+private var searchTask: URLSessionDataTask?
+
+func search(_ keyword: String) {
+    searchTask?.cancel()                     // 取消上一次搜索
+    let task = session.dataTask(with: makeRequest(keyword)) { [weak self] data, _, error in
+        guard let self else { return }
+        if let error = error as? URLError, error.code == .cancelled { return }
+        // 更新结果
+    }
+    searchTask = task
+    task.resume()
+}
+```
+- 页面消失/控制器销毁时取消未完成请求，避免回调打到已释放对象；
+- 搜索、筛选、输入联想要**取消旧请求**，防止旧响应覆盖新结果；
+- delegate 是强引用，session 用完要 `invalidateAndCancel()`（立即取消）或 `finishTasksAndInvalidate()`（等在途完成）；
+- async/await 场景用 `Task` 句柄取消，必要时配合 `withTaskCancellationHandler`；
+- 取消是正常控制流，不要当错误弹窗。
 
 ---
 
@@ -225,12 +427,16 @@ async/await 是对 completion 的语法糖，底层还是 URLSession，代码简
 | 场景 | 推荐方案 |
 |---|---|
 | 普通 HTTP/HTTPS 接口 | URLSession async/await / Alamofire |
-| 文件下载、断点、后台下载 | URLSessionDownloadTask（delegate） |
-| 文件上传 | URLSessionUploadTask |
-| 实时消息、WebSocket | URLSessionWebSocketTask (iOS13+) |
-| 自定义私有 TCP 二进制协议 | CFStream / BSD Socket |
-| UDP 实时流 | NWFramework（NWConnection） |
-| 网络状态监听 | NWPathMonitor |
+| 需要进度、证书固定、任务指标 | 自定义 `URLSession` + delegate |
+| 弱网/地铁/电梯场景 | `waitsForConnectivity = true` + 超时预算 |
+| 文件下载、断点、后台下载 | `URLSessionDownloadTask`（delegate） |
+| 大文件上传 | `URLSessionUploadTask`（`fromFile`，避免读入内存） |
+| 实时消息、WebSocket | `URLSessionWebSocketTask`（iOS 13+） |
+| 自定义私有 TCP 二进制协议 | `URLSessionStreamTask` / CFStream / BSD Socket |
+| UDP 实时流 | Network.framework（`NWConnection`） |
+| HTTP/2 / HTTP/3 | URLSession 自动协商，无需改代码 |
+| 网络状态监听 | `NWPathMonitor` |
+| 本地网络权限 | `NSLocalNetworkUsageDescription` + `NSBonjourServices` |
 
 ---
 
