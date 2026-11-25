@@ -15,6 +15,7 @@
 - [MCP 协议（Model Context Protocol）](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/06-MCP协议.md)
 - [Embedding 与向量检索原理](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/07-Embedding与向量检索原理.md)
 - [微调与对齐：SFT / LoRA / RLHF / DPO](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/08-微调与对齐.md)
+- [大模型推理与部署](https://kaikai7758521.github.io/LearnAndLife/#/AI时代技术/基础概念/09-大模型推理与部署.md)
 
 ## AI时代技术 / 技术实践
 
@@ -33,11 +34,21 @@
 
 - [篮球](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/运动/01-篮球.md)
 - [羽毛球](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/运动/02-羽毛球.md)
+- [跑步训练：从入门到日常](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/运动/03-跑步训练.md)
+
+## 日常生活 / 钓鱼
+
+- [钓鱼入门：装备、钓法与安全](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/钓鱼/01-钓鱼入门.md)
+
+## 日常生活 / 饮食
+
+- [日常饮食与营养基础](https://kaikai7758521.github.io/LearnAndLife/#/日常生活/饮食/01-日常饮食与营养基础.md)
 
 ## 电子工程 / 常见基本电路
 
 - [包含芯片的最小系统电路](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/常见基本电路/01-最小系统.md)
 - [芯片电路的简单介绍](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/常见基本电路/02-芯片电路.md)
+- [电源电路基础：LDO 与 DC-DC](https://kaikai7758521.github.io/LearnAndLife/#/电子工程/常见基本电路/03-电源电路基础.md)
 
 ## 电子工程 / 电路案例
 
@@ -91,6 +102,14 @@
 ## 计算机基础 / 算法 / 链表和指针
 
 - [倒序打印链表](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/算法/链表和指针/01-倒序打印链表.md)
+
+## 计算机基础 / 编译原理
+
+- [编译流程总览：从源码到机器码](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/编译原理/01-编译流程总览.md)
+
+## 计算机基础 / 计算机网络
+
+- [一次 HTTPS 连接的一生](https://kaikai7758521.github.io/LearnAndLife/#/计算机基础/计算机网络/01-一次HTTPS连接的一生.md)
 
 <!-- NOTES:END -->
 

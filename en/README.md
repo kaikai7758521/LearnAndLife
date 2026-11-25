@@ -15,6 +15,7 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 - [MCP Protocol (Model Context Protocol)](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/06-MCP协议.md)
 - [Embedding and vector retrieval principle](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/07-Embedding与向量检索原理.md)
 - [Fine-tuning and alignment: SFT / LoRA / RLHF / DPO](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/08-微调与对齐.md)
+- [Large model inference and deployment](https://kaikai7758521.github.io/LearnAndLife/#/en/AI时代技术/基础概念/09-大模型推理与部署.md)
 
 ## AI Technology / Hands-on Practice
 
@@ -33,11 +34,21 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 
 - [Basketball](https://kaikai7758521.github.io/LearnAndLife/#/en/日常生活/运动/01-篮球.md)
 - [Badminton](https://kaikai7758521.github.io/LearnAndLife/#/en/日常生活/运动/02-羽毛球.md)
+- [Running training: from entry to daily routine](https://kaikai7758521.github.io/LearnAndLife/#/en/日常生活/运动/03-跑步训练.md)
+
+## Daily Life / Fishing
+
+- [Introduction to fishing: equipment, fishing techniques and safety](https://kaikai7758521.github.io/LearnAndLife/#/en/日常生活/钓鱼/01-钓鱼入门.md)
+
+## Daily Life / Diet
+
+- [Daily diet and nutrition basics](https://kaikai7758521.github.io/LearnAndLife/#/en/日常生活/饮食/01-日常饮食与营养基础.md)
 
 ## Electronic Engineering / Common Basic Circuits
 
 - [Minimal system circuit including chip](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/常见基本电路/01-最小系统.md)
 - [A brief introduction to chip circuits](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/常见基本电路/02-芯片电路.md)
+- [Power circuit basics: LDO and DC-DC](https://kaikai7758521.github.io/LearnAndLife/#/en/电子工程/常见基本电路/03-电源电路基础.md)
 
 ## Electronic Engineering / Circuit Projects
 
@@ -76,7 +87,7 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 
 ## Computer Science / Algorithms / Array arithmetic
 
-- [Repeated numbers in Array](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/01-数组中的重复数字.md)
+- [Duplicate numbers in the array](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/01-数组中的重复数字.md)
 - [Finds numbers in a two-dimensional array](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/数组算法/02-查找二维数组中的数字.md)
 
 ## Computer Science / Algorithms / Find and sort
@@ -91,6 +102,14 @@ Markdown study notes organized by **learning area / topic / detail**. This is th
 ## Computer Science / Algorithms / Linked Lists and Pointers
 
 - [Print linked list in reverse order](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/算法/链表和指针/01-倒序打印链表.md)
+
+## Computer Science / Compilers
+
+- [Untitled](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/编译原理/01-编译流程总览.md)
+
+## Computer Science / Computer Networks
+
+- [A lifetime of an HTTPS connection](https://kaikai7758521.github.io/LearnAndLife/#/en/计算机基础/计算机网络/01-一次HTTPS连接的一生.md)
 
 <!-- NOTES:END -->
 
